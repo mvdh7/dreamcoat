@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dreamcoat"
+description = "The joyful oceanographic seagoing expedition planning helper"
+readme = "README.md"
+dependencies = [
+    "cartopy",
+    "matplotlib",
+    "xarray",
+]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "dreamcoat.__version__"}
