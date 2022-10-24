@@ -8,7 +8,9 @@ description = "The joyful oceanographic seagoing expedition planning helper"
 readme = "README.md"
 dependencies = [
     "cartopy",
+    "keyring",
     "matplotlib",
+    "motuclient",
     "xarray",
 ]
 dynamic = ["version"]
