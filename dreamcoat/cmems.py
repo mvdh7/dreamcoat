@@ -1,42 +1,46 @@
-from datetime import date
 import os
+from datetime import date
+import xarray as xr
+
+
+def get_filename(
+    date_min, date_max, longitude_min, longitude_max, latitude_min, latitude_max
+):
+    if not date_min:
+        date_min = date.today().strftime("%Y-%m-%d")
+    if not date_max:
+        date_max = date.today().strftime("%Y-%m-%d")
+    return "global-analysis-forecast-phy-001-024_{}_{}_{}_{}_{}_{}.nc".format(
+        date_min, date_max, longitude_min, longitude_max, latitude_min, latitude_max
+    )
 
 
 def download_cmems(
+    filename=None,
+    filepath="",
     date_min=None,
     date_max=None,
     latitude_min=-90,
     latitude_max=90,
     longitude_min=-180,
     longitude_max=180,
-    filepath="",
     username=None,
     password=None,
 ):
-    # if not username:
-    #     if not keyring.get_password("dreamcoat.cmems", "dreamcoat.cmems.username"):
-    #         keyring.set_password(
-    #             "dreamcoat.cmems",
-    #             "dreamcoat.cmems.username",
-    #             input("Please enter your CMEMS username: "),
-    #         )
-    #     username = keyring.get_password("dreamcoat.cmems", "dreamcoat.cmems.username")
-    # print(username)
-    # if not keyring.get_password(
-    #     "dreamcoat.cmems",
-    #     keyring.get_password("dreamcoat.cmems", "dreamcoat.cmems.username"),
-    # ):
-    #     keyring.set_password(
-    #         "dreamcoat.cmems",
-    #         keyring.get_password("dreamcoat.cmems", "dreamcoat.cmems.username"),
-    #         "\nPlease enter your CMEMS password: ",
-    #     )
-    date_min = "2022-10-24"
-    date_max = "2022-11-02"
+    # Deal with None inputs
+    if not username:
+        username = input("Please enter your CMEMS username: ")
+    if not password:
+        password = input("Please enter your CMEMS password: ")
     if not date_min:
         date_min = date.today().strftime("%Y-%m-%d")
     if not date_max:
         date_max = date.today().strftime("%Y-%m-%d")
+    if not filename:
+        filename = get_filename(
+            date_min, date_max, longitude_min, longitude_max, latitude_min, latitude_max
+        )
+    # Download the file
     os.system(
         "motuclient --motu https://nrt.cmems-du.eu/motu-web/Motu "
         + "--service-id GLOBAL_ANALYSIS_FORECAST_PHY_001_024-TDS "
@@ -51,6 +55,39 @@ def download_cmems(
         + "--variable mlotst --variable so --variable thetao "
         + "--variable uo --variable vo --variable zos "
         + "--out-dir {} ".format(filepath)
-        + "--out-name {}.nc ".format(filename)
+        + "--out-name {} ".format(filename)
         + "--user {} --pwd {}".format(username, password)
     )
+
+
+def open_cmems(
+    filepath="",
+    date_min=None,
+    date_max=None,
+    latitude_min=-90,
+    latitude_max=90,
+    longitude_min=-180,
+    longitude_max=180,
+    username=None,
+    password=None,
+):
+    filename = get_filename(
+        date_min, date_max, longitude_min, longitude_max, latitude_min, latitude_max
+    )
+    try:
+        cmems = xr.open_dataset(filepath + filename)
+    except FileNotFoundError:
+        download_cmems(
+            filename=filename,
+            filepath=filepath,
+            date_min=date_min,
+            date_max=date_max,
+            latitude_min=latitude_min,
+            latitude_max=latitude_max,
+            longitude_min=longitude_min,
+            longitude_max=longitude_max,
+            username=username,
+            password=password,
+        )
+        cmems = xr.open_dataset(filepath + filename)
+    return cmems
