@@ -1,3 +1,4 @@
+import numpy as np
 import dreamcoat as dc
 
 
@@ -11,11 +12,34 @@ import dreamcoat as dc
 #     date_max="2022-11-02",
 # )
 
+# boxros-6qacgu-bUqmyr
 
-phys = dc.cmems.open_cmems(
-    filepath="tests/data/",
+lat_lon_lims = dict(
     longitude_min=-70,
     longitude_max=30,
-    latitude_min=-50,
+    latitude_min=-40,
     latitude_max=-20,
+)
+phys = dc.cmems.open_surphys(
+    filepath="tests/data/",
+    **lat_lon_lims,
+    date_min="2022-10-24",
+    date_max="2022-10-24",
+)
+
+
+speed_knots = 9
+timestep_hours = 24
+ship_distance = (
+    dc.convert.knots_to_kph(speed_knots) * timestep_hours * np.array([1, 2, 3])
+)
+
+
+fig, ax = dc.plot.surphys(
+    phys,
+    "theta",
+    land_visible=False,
+    ship_longitude=0,
+    ship_latitude=-35,
+    ship_distance=ship_distance,
 )
