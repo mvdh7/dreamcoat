@@ -173,57 +173,64 @@ def surphys(
     """
 
     # Set up dict of settings for all variables
-    salinity_range = data.salinity.max() - data.salinity.min()
-    theta_range = data.theta.max() - data.salinity.min()
+    if map_extent is not None:
+        data_extent = data.sel(
+            longitude=slice(map_extent[0], map_extent[1]),
+            latitude=slice(map_extent[2], map_extent[3]),
+        )
+    salinity_range = data_extent.salinity.max() - data_extent.salinity.min()
+    theta_range = data_extent.theta.max() - data_extent.salinity.min()
     fvar_settings = {
         "current_east": dict(
             cmap="RdBu",
             label="Eastwards current velocity / m/s",
             ship_color="xkcd:kelly green",
-            vmin=-np.max(np.abs(data.current_east)) * color_zoom_factor,
-            vmax=np.max(np.abs(data.current_east)) * color_zoom_factor,
+            vmin=-np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
+            vmax=np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
         ),
         "current_north": dict(
             cmap="RdBu",
             label="Northwards current velocity / m/s",
             ship_color="xkcd:kelly green",
-            vmin=-np.max(np.abs(data.current_north)) * color_zoom_factor,
-            vmax=np.max(np.abs(data.current_north)) * color_zoom_factor,
+            vmin=-np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
+            vmax=np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
         ),
         "current_speed": dict(
             cmap="cividis",
             label="Current speed / m/s",
             ship_color="xkcd:strawberry",
             vmin=0,
-            vmax=data.current_speed.max() * color_zoom_factor,
+            vmax=data_extent.current_speed.max() * color_zoom_factor,
         ),
         "mld": dict(
             cmap="magma_r",
             label="Mixed layer depth / m",
             ship_color="xkcd:kelly green",
             vmin=0,
-            vmax=data.mld.max() * color_zoom_factor,
+            vmax=data_extent.mld.max() * color_zoom_factor,
         ),
         "salinity": dict(
             cmap="viridis",
             label="Practical salinity",
             ship_color="xkcd:strawberry",
-            vmin=data.salinity.min() + salinity_range * (1 - color_zoom_factor) / 2,
-            vmax=data.salinity.max() - salinity_range * (1 - color_zoom_factor) / 2,
+            vmin=data_extent.salinity.min()
+            + salinity_range * (1 - color_zoom_factor) / 2,
+            vmax=data_extent.salinity.max()
+            - salinity_range * (1 - color_zoom_factor) / 2,
         ),
         "ssh": dict(
             cmap="BrBG_r",
             label="Sea surface height / m",
             ship_color="xkcd:light purple",
-            vmin=-np.max(np.abs(data.ssh)) * color_zoom_factor,
-            vmax=np.max(np.abs(data.ssh)) * color_zoom_factor,
+            vmin=-np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
+            vmax=np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
         ),
         "theta": dict(
             cmap="plasma",
             label="Potential temperature / °C",
             ship_color="xkcd:aqua",
-            vmin=data.theta.min() + theta_range * (1 - color_zoom_factor) / 2,
-            vmax=data.theta.max() - theta_range * (1 - color_zoom_factor) / 2,
+            vmin=data_extent.theta.min() + theta_range * (1 - color_zoom_factor) / 2,
+            vmax=data_extent.theta.max() - theta_range * (1 - color_zoom_factor) / 2,
         ),
     }
 
