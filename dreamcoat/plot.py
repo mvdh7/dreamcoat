@@ -390,3 +390,5 @@ def surphys(
         )
 
     return fig, ax
+
+# add a surphys_next_days function
