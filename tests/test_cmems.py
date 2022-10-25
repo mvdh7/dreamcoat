@@ -37,9 +37,14 @@ ship_distance = (
 
 fig, ax = dc.plot.surphys(
     phys,
-    "theta",
+    "mld",
     land_visible=False,
     ship_longitude=0,
     ship_latitude=-35,
     ship_distance=ship_distance,
+    quiver_coarsen=20,
+    quiver_alpha=0.1,
+    map_extent=[-5, 5, -39, -31],
+    # vmin=34,
+    # vmax=37,
 )
