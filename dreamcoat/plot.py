@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 from matplotlib import pyplot as plt
 from cartopy import crs as ccrs, feature as cfeature
@@ -126,6 +127,10 @@ def surphys(
         Figure size in inches, by default [6.4, 4.8].
     land_visible : bool, optional
         Whether to draw land areas from Natural Earth Data, by default True.
+    longitude_fmt : str, optional
+        Format of the longitude axis labels, by default ':03.0f'.
+    latitude_fmt : str, optional
+        Format of the latitude axis labels, by default ':02.0f'.
     map_extent : list, optional
         Map extents in decimal degrees, if different from those automatically generated
         by the dataset, by default None.
