@@ -84,7 +84,6 @@ def add_credit(ax):
 def surphys(
     data,
     fvar,
-    itime=0,
     color_zoom_factor=0.9,
     dpi=300,
     figsize=[6.4, 4.8],
@@ -116,8 +115,6 @@ def surphys(
     fvar : str
         Which variable from the dataset to plot: 'theta', 'salinity', 'mld', 'ssh',
         'current_east', 'current_north' or 'current_speed'.
-    itime : int, optional
-        Which timestep from the dataset to plot, by default 0.
     color_zoom_factor : float, optional
         What fraction of the total range of values to show on the colour bar, by default
         0.9.
@@ -178,6 +175,8 @@ def surphys(
             longitude=slice(map_extent[0], map_extent[1]),
             latitude=slice(map_extent[2], map_extent[3]),
         )
+    else:
+        data_extent = data.copy()
     salinity_range = data_extent.salinity.max() - data_extent.salinity.min()
     theta_range = data_extent.theta.max() - data_extent.salinity.min()
     fvar_settings = {
@@ -250,7 +249,6 @@ def surphys(
     # Plot the selected variable
     dplot = (
         data[fvar]
-        .isel(time=itime)
         .plot(
             ax=ax,
             add_colorbar=False,
@@ -292,7 +290,7 @@ def surphys(
             coarsen_x = coarsen_y = quiver_coarsen
         # Coarsen the quiver data
         data_coarse = (
-            data.isel(time=itime, depth=0)
+            data_extent.isel(depth=0)
             .coarsen(longitude=coarsen_x, latitude=coarsen_y, boundary="trim")
             .mean()
         )
@@ -367,7 +365,7 @@ def surphys(
     )
 
     # Misc. additions and settings
-    ax.set_title(np.datetime_as_string(data.time[itime].data, "D"))
+    ax.set_title("")
     add_ship(
         ax,
         ship_longitude,
@@ -384,8 +382,8 @@ def surphys(
     if save_figure:
         plt.savefig(
             save_path
-            + "surdata_{}_{}.png".format(
-                fvar, np.datetime_as_string(data.time[itime].data, "D")
+            + "surphys_{}_{}.png".format(
+                fvar
             )
         )
 
