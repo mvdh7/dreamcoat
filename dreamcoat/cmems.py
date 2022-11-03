@@ -13,11 +13,9 @@ def get_surphys_filename(
     Parameters
     ----------
     date_min : str
-        First date of data to download in '%Y-%m-%d' format, by default None, in which
-        case today's date is used.
+        First date of data to download in '%Y-%m-%d' format.  Uses today if None.
     date_max : str
-        Last date of data to download in '%Y-%m-%d' format, by default None, in which
-        case today's date is used.
+        Last date of data to download in '%Y-%m-%d' format.  Uses today if None.
     latitude_min : int
         Minimum latitude in decimal degrees N.
     latitude_max : int
