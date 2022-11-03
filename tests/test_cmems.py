@@ -2,7 +2,6 @@ import numpy as np
 import dreamcoat as dc
 
 
-
 # boxros-6qacgu-bUqmyr
 
 lims = dict(
@@ -14,8 +13,8 @@ lims = dict(
     latitude_max=65,
 )
 # dc.cmems.download_surphys(
-    # filepath="tests/data/",
-    # **lims,
+# filepath="tests/data/",
+# **lims,
 # )
 phys = dc.cmems.open_surphys(
     filepath="tests/data/",

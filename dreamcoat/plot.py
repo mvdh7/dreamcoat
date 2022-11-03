@@ -247,16 +247,13 @@ def surphys(
     ax = fig.add_subplot(projection=map_projection)
 
     # Plot the selected variable
-    dplot = (
-        data[fvar]
-        .plot(
-            ax=ax,
-            add_colorbar=False,
-            cmap=fs["cmap"],
-            transform=ccrs.PlateCarree(),
-            vmin=fs["vmin"],
-            vmax=fs["vmax"],
-        )
+    dplot = data[fvar].plot(
+        ax=ax,
+        add_colorbar=False,
+        cmap=fs["cmap"],
+        transform=ccrs.PlateCarree(),
+        vmin=fs["vmin"],
+        vmax=fs["vmax"],
     )
 
     # Determine how to extend the colorbar to show values outside its range
@@ -380,13 +377,9 @@ def surphys(
 
     # Save to file, if requested
     if save_figure:
-        plt.savefig(
-            save_path
-            + "surphys_{}_{}.png".format(
-                fvar
-            )
-        )
+        plt.savefig(save_path + "surphys_{}.png".format(fvar))
 
     return fig, ax
+
 
 # add a surphys_next_days function
