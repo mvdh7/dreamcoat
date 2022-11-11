@@ -1,13 +1,11 @@
 import warnings
 import numpy as np
-from matplotlib import pyplot as plt, dates as mdates, rcParams
+from matplotlib import pyplot as plt, dates as mdates, patheffects as pe
+from matplotlib.collections import LineCollection
 from scipy.interpolate import pchip_interpolate
 from cartopy import crs as ccrs, feature as cfeature
 from cartopy.geodesic import Geodesic
 from . import convert, meta
-
-
-# rcParams["font.family"] = "Open Sans"
 
 
 def add_ship(
@@ -581,3 +579,69 @@ def surphys_timeseries_grid(data, dpi=300, figsize=[9.6, 7.2]):
             ax.set_visible(False)
     plt.tight_layout()
     return fig, axs
+
+
+def _get_surphys_currents_line(data, interpolate_pchip):
+    if interpolate_pchip:
+        ndates = mdates.date2num(data.time)
+        it = np.linspace(ndates[0], ndates[-1], num=ndates.size * 10)
+        # ft = mdates.num2date(it)
+        fx = pchip_interpolate(ndates, data.current_east.data, it)
+        fy = pchip_interpolate(ndates, data.current_north.data, it)
+    else:
+        it = mdates.date2num(data.time)
+        fx = data.current_east.data
+        fy = data.current_north.data
+    ftheta, frho = convert.cartesian_to_polar(fx, fy)
+    return it, ftheta, frho
+
+
+def surphys_currents(data, dpi=300, figsize=[6.4, 4.8]):
+    """Draw a polar plot of surface currents, coloured by date.
+
+    Parameters
+    ----------
+    data : xarray Dataset.
+        The dataset, opened with cmems.open_surphys(), at a single time point.
+    dpi : int, optional
+        Figure resolution in dots per inch, by default 300.
+    figsize : list, optional
+        Figure size in inches, by default [6.4, 4.8].
+
+    Returns
+    -------
+    matplotlib figure
+        The generated matplotlib figure.
+    matplotlib axis
+        The generated matplotlib axis.
+    """
+    # Initialise figure
+    fig = plt.figure(dpi=300)
+    ax = fig.add_subplot(111, projection="polar")
+
+    # Get points in cartesian coordinates
+    it, ftheta, frho = _get_surphys_currents_line(data, True)
+    points = np.array([ftheta, frho]).T.reshape(-1, 1, 2)
+    segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+    # Correct angle orientation for plot (north up and clockwise increase)
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+
+    # Create and draw coloured lines
+    norm = plt.Normalize(it.min(), it.max())
+    lc = LineCollection(
+        segments, cmap="viridis", norm=norm, path_effects=[pe.Stroke(capstyle="round")]
+    )
+    lc.set_array(it)
+    lc.set_linewidth(5)
+    line = ax.add_collection(lc)
+
+    # # Colorbar
+    # plt.colorbar(line, location='right')
+
+    # Finish off
+    add_credit(ax)
+    ax.set_ylim([0, np.max(frho * 1.1)])
+    plt.tight_layout()
+    return fig, ax

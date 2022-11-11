@@ -88,7 +88,8 @@ def km_to_nm(km):
 
 
 def cartesian_to_polar(x, y):
-    """Convert from Cartesian to polar co-ordinates.
+    """Convert from Cartesian to polar co-ordinates, where theta is zero in the N
+    position and increases clockwise.
 
     Parameters
     ----------
@@ -105,12 +106,13 @@ def cartesian_to_polar(x, y):
         Radius in polar co-ordinates.
     """
     rho = np.sqrt(x**2 + y**2)
-    theta = np.arctan2(y, x)
+    theta = np.arctan2(y, -x) - np.pi / 2
     return theta, rho
 
 
 def polar_to_cartesian(theta, rho):
-    """Convert from polar to Cartesian co-ordinates.
+    """Convert from polar to Cartesian co-ordinates, where theta is zero in the N
+    position and increases clockwise.
 
     Parameters
     ----------

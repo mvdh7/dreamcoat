@@ -66,16 +66,57 @@ fig, ax = dc.plot.surphys_timeseries(f_surphys, fvar)
 #%%
 fig, axs = dc.plot.surphys_timeseries_grid(f_surphys)
 
+#%%
+plt.scatter(f_surphys.current_east, f_surphys.current_north)
+plt.axhline(0)
+plt.axvline(0)
+
 #%% Polar
+# from matplotlib import dates as mdates, pyplot as plt, patheffects as pe
+# from matplotlib.collections import LineCollection
+# from scipy.interpolate import pchip_interpolate
+# from dreamcoat import convert
+
+dc.plot.surphys_currents(f_surphys)
 
 
-fig = plt.figure(dpi=300)
-ax = fig.add_subplot(111, projection="polar")
+# def _get_surphys_currents_line(data, interpolate_pchip):
+#     if interpolate_pchip:
+#         ndates = mdates.date2num(data.time)
+#         it = np.linspace(ndates[0], ndates[-1], num=ndates.size * 10)
+#         # ft = mdates.num2date(it)
+#         fx = pchip_interpolate(ndates, data.current_east.data, it)
+#         fy = pchip_interpolate(ndates, data.current_north.data, it)
+#     else:
+#         it = mdates.date2num(data.time)
+#         fx = data.current_east.data
+#         fy = data.current_north.data
+#     ftheta, frho = convert.cartesian_to_polar(fx, fy)
+#     return it, ftheta, frho
 
-# Correct angle orientation
-ax.set_theta_zero_location("N")
-ax.set_theta_direction(-1)
 
-dc.plot.add_credit(ax)
+# it, ftheta, frho = _get_surphys_currents_line(f_surphys, True)
 
-# ax.scatter(np.deg2rad(90), f_surphys.current_speed)
+# points = np.array([ftheta, frho]).T.reshape(-1, 1, 2)
+# segments = np.concatenate([points[:-1], points[1:]], axis=1)
+
+# fig = plt.figure(dpi=300)
+# ax = fig.add_subplot(111, projection="polar")
+
+# # Correct angle orientation
+# ax.set_theta_zero_location("N")
+# ax.set_theta_direction(-1)
+
+# dc.plot.add_credit(ax)
+
+# # ax.scatter(np.deg2rad(90), f_surphys.current_speed)
+# ax.plot(ftheta, frho)
+
+# norm = plt.Normalize(it.min(), it.max())
+# lc = LineCollection(
+#     segments, cmap="viridis", norm=norm, path_effects=[pe.Stroke(capstyle="round")]
+# )
+# # Set the values used for colormapping
+# lc.set_array(it)
+# lc.set_linewidth(5)
+# line = ax.add_collection(lc)
