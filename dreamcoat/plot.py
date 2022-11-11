@@ -1,9 +1,13 @@
 import warnings
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib import pyplot as plt, dates as mdates, rcParams
+from scipy.interpolate import pchip_interpolate
 from cartopy import crs as ccrs, feature as cfeature
 from cartopy.geodesic import Geodesic
 from . import convert, meta
+
+
+# rcParams["font.family"] = "Open Sans"
 
 
 def add_ship(
@@ -81,9 +85,52 @@ def add_credit(ax):
     )
 
 
-def surphys(
+var_settings = {
+    "current_east": dict(
+        cmap="RdBu",
+        label="Eastwards current velocity / m/s",
+        ship_color="xkcd:kelly green",
+    ),
+    "current_north": dict(
+        cmap="RdBu",
+        label="Northwards current velocity / m/s",
+        ship_color="xkcd:kelly green",
+    ),
+    "current_speed": dict(
+        cmap="cividis",
+        label="Current speed / m/s",
+        ship_color="xkcd:strawberry",
+    ),
+    "current": dict(
+        label="Current speed / m/s",
+    ),
+    "mld": dict(
+        cmap="magma_r",
+        label="Mixed layer depth / m",
+        ship_color="xkcd:kelly green",
+    ),
+    "salinity": dict(
+        cmap="viridis",
+        label="Practical salinity",
+        ship_color="xkcd:strawberry",
+    ),
+    "ssh": dict(
+        cmap="BrBG_r",
+        label="Sea surface height / m",
+        ship_color="xkcd:light purple",
+    ),
+    "theta": dict(
+        cmap="plasma",
+        label="Potential temperature / °C",
+        ship_color="xkcd:aqua",
+    ),
+}
+
+
+def surphys_map(
     data,
     fvar,
+    ax=None,
     color_zoom_factor=0.9,
     dpi=300,
     figsize=[6.4, 4.8],
@@ -101,8 +148,7 @@ def surphys(
     ship_color=None,
     ship_distance=None,
     ship_fade_concentric=True,
-    ship_latitude=None,
-    ship_longitude=None,
+    ship_lon_lat=None,
     vmin=None,
     vmax=None,
 ):
@@ -111,10 +157,12 @@ def surphys(
     Parameters
     ----------
     data : xarray Dataset.
-        The dataset, opened with cmems.open_surphys().
+        The dataset, opened with cmems.open_surphys(), at a single time point.
     fvar : str
         Which variable from the dataset to plot: 'theta', 'salinity', 'mld', 'ssh',
         'current_east', 'current_north' or 'current_speed'.
+    ax : matplotlib axes, optional
+        An existing set of axes to plot onto, by default None.
     color_zoom_factor : float, optional
         What fraction of the total range of values to show on the colour bar, by default
         0.9.
@@ -149,13 +197,12 @@ def surphys(
     ship_color : str, optional
         What colour to plot the ship's location in, by default None.
     ship_distance : float, optional
-        Distance of the concentric circle lines around the ship's location in km, by default None.
+        Distance of the concentric circle lines around the ship's location in km, by
+        default None.
     ship_fade_concentric : bool, optional
         Whether to fade out the concentric circle lines, by default True.
-    ship_latitude : float, optional
-        Latitude of the ship in decimal degrees N, by default None.
-    ship_longitude : float, optional
-        Longitude of the ship in decimal degrees E, by default None.
+    ship_lon_lat : float, optional
+        Longitude and latitude of the ship in decimal degrees N or E, by default None.
     vmin : float, optional
         Minimum value for the colour bar, by default None.
     vmax : float, optional
@@ -168,70 +215,53 @@ def surphys(
     matplotlib axis
         The generated matplotlib axis.
     """
-
     # Set up dict of settings for all variables
     if map_extent is not None:
         data_extent = data.sel(
             longitude=slice(map_extent[0], map_extent[1]),
             latitude=slice(map_extent[2], map_extent[3]),
         )
+        if data_extent.theta.size == 0:
+            print("map_extent falls outside data_extent - ignoring!")
+            data_extent = data.copy()
     else:
         data_extent = data.copy()
     salinity_range = data_extent.salinity.max() - data_extent.salinity.min()
     theta_range = data_extent.theta.max() - data_extent.salinity.min()
     fvar_settings = {
         "current_east": dict(
-            cmap="RdBu",
-            label="Eastwards current velocity / m/s",
-            ship_color="xkcd:kelly green",
             vmin=-np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
             vmax=np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
         ),
         "current_north": dict(
-            cmap="RdBu",
-            label="Northwards current velocity / m/s",
-            ship_color="xkcd:kelly green",
             vmin=-np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
             vmax=np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
         ),
         "current_speed": dict(
-            cmap="cividis",
-            label="Current speed / m/s",
-            ship_color="xkcd:strawberry",
             vmin=0,
             vmax=data_extent.current_speed.max() * color_zoom_factor,
         ),
         "mld": dict(
-            cmap="magma_r",
-            label="Mixed layer depth / m",
-            ship_color="xkcd:kelly green",
             vmin=0,
             vmax=data_extent.mld.max() * color_zoom_factor,
         ),
         "salinity": dict(
-            cmap="viridis",
-            label="Practical salinity",
-            ship_color="xkcd:strawberry",
             vmin=data_extent.salinity.min()
             + salinity_range * (1 - color_zoom_factor) / 2,
             vmax=data_extent.salinity.max()
             - salinity_range * (1 - color_zoom_factor) / 2,
         ),
         "ssh": dict(
-            cmap="BrBG_r",
-            label="Sea surface height / m",
-            ship_color="xkcd:light purple",
             vmin=-np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
             vmax=np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
         ),
         "theta": dict(
-            cmap="plasma",
-            label="Potential temperature / °C",
-            ship_color="xkcd:aqua",
             vmin=data_extent.theta.min() + theta_range * (1 - color_zoom_factor) / 2,
             vmax=data_extent.theta.max() - theta_range * (1 - color_zoom_factor) / 2,
         ),
     }
+    for k in fvar_settings:
+        fvar_settings[k].update(var_settings[k])
 
     # Finalise settings for the selected variable
     fs = fvar_settings[fvar].copy()
@@ -242,9 +272,12 @@ def surphys(
     if vmax is not None:
         fs["vmax"] = vmax
 
-    # Initialise the figure
-    fig = plt.figure(dpi=dpi, figsize=figsize)
-    ax = fig.add_subplot(projection=map_projection)
+    # Initialise the figure, if necessary
+    if ax is None:
+        fig = plt.figure(dpi=dpi, figsize=figsize)
+        ax = fig.add_subplot(projection=map_projection)
+    else:
+        fig = ax.get_figure()
 
     # Plot the selected variable
     dplot = data[fvar].plot(
@@ -365,8 +398,7 @@ def surphys(
     ax.set_title("")
     add_ship(
         ax,
-        ship_longitude,
-        ship_latitude,
+        *ship_lon_lat,
         distance=ship_distance,
         color=fs["ship_color"],
         fade_concentric=ship_fade_concentric,
@@ -375,11 +407,177 @@ def surphys(
     ax.set_extent(map_extent, crs=ccrs.PlateCarree())  # in case it's changed
     plt.tight_layout()
 
-    # Save to file, if requested
+    # Save to file, if requested, and finish
     if save_figure:
         plt.savefig(save_path + "surphys_{}.png".format(fvar))
-
     return fig, ax
 
 
 # add a surphys_next_days function
+
+
+def _get_surphys_timeseries_line(data, fvar, interpolate_pchip):
+    if interpolate_pchip:
+        ndates = mdates.date2num(data.time)
+        ix = np.linspace(ndates[0], ndates[-1], num=ndates.size * 10)
+        fx = mdates.num2date(ix)
+        fy = pchip_interpolate(ndates, data[fvar].data, ix)
+    else:
+        fx = data.time.data
+        fy = data[fvar].data
+    return fx, fy
+
+
+def surphys_timeseries(
+    data,
+    fvar,
+    ax=None,
+    dpi=300,
+    figsize=[6.4, 4.8],
+    draw_line=True,
+    draw_points=True,
+    interpolate_pchip=True,
+    show_offset_text=True,
+):
+    """Show a timeseries of data from a given location.
+
+    Parameters
+    ----------
+    data : xarray Dataset.
+        The dataset, opened with cmems.open_surphys(), at a single time point.
+    fvar : str
+        Which variable from the dataset to plot: 'theta', 'salinity', 'mld', 'ssh',
+        'current_east', 'current_north', 'current_speed' or 'current'.
+    ax : matplotlib axes, optional
+        An existing set of axes to plot onto, by default None.
+    dpi : int, optional
+        Figure resolution in dots per inch, by default 300.
+    figsize : list, optional
+        Figure size in inches, by default [6.4, 4.8].
+    draw_line : bool, optional
+        Whether to draw lines between the data points, by default True.
+    draw_points : bool, optional
+        Whether to show the data points with markers, by default True.
+    interpolate_pchip : bool, optional
+        Whether to use PCHIP interpolation for the lines, by default True.
+    show_offset_text : bool, optional
+        Whether to show the offset text on the date axis, by default True.
+
+    Returns
+    -------
+    matplotlib figure
+        The generated matplotlib figure.
+    matplotlib axis
+        The generated matplotlib axis.
+    """
+    # Create figure, if necessary
+    if ax is None:
+        fig, ax = plt.subplots(dpi=dpi, figsize=figsize)
+    else:
+        fig = ax.get_figure()
+
+    # Plot data
+    if draw_line:
+        if fvar == "current":
+            fx, fy = _get_surphys_timeseries_line(
+                data, "current_north", interpolate_pchip
+            )
+            ax.plot(fx, fy, c="xkcd:cerulean", alpha=0.8, label="North")
+            fx, fy = _get_surphys_timeseries_line(
+                data, "current_east", interpolate_pchip
+            )
+            ax.plot(fx, fy, c="xkcd:tangerine", alpha=0.8, label="East")
+            fx, fy = _get_surphys_timeseries_line(
+                data, "current_speed", interpolate_pchip
+            )
+            ax.plot(fx, fy, c="xkcd:almost black", alpha=0.8, label="Total", zorder=10)
+            ax.legend()
+        else:
+            fx, fy = _get_surphys_timeseries_line(data, fvar, interpolate_pchip)
+            ax.plot(fx, fy, c="xkcd:navy")
+    if draw_points:
+        if fvar == "current":
+            ax.scatter(
+                "time",
+                "current_north",
+                alpha=0.8,
+                c="xkcd:cerulean",
+                data=data,
+                label=None,
+                s=20,
+            )
+            ax.scatter(
+                "time",
+                "current_east",
+                alpha=0.8,
+                c="xkcd:tangerine",
+                data=data,
+                label=None,
+                s=20,
+            )
+            ax.scatter(
+                "time",
+                "current_speed",
+                alpha=0.8,
+                c="xkcd:almost black",
+                data=data,
+                label=None,
+                s=20,
+                zorder=10,
+            )
+        else:
+            ax.scatter("time", fvar, data=data, c="xkcd:navy", s=20)
+    if fvar == "mld":
+        ax.invert_yaxis()
+
+    # Add x-axis zero line if needed
+    if fvar == "current" or (
+        fvar in ["current_north", "current_east", "ssh"]
+        and data[fvar].max() > 0
+        and data[fvar].min() < 0
+    ):
+        ax.axhline(0, c="k", lw=0.8)
+
+    # Axis display settings
+    ax.set_ylabel(var_settings[fvar]["label"])
+    locator = mdates.AutoDateLocator(minticks=5, maxticks=12)
+    formatter = mdates.ConciseDateFormatter(locator)
+    ax.xaxis.set_major_locator(locator)
+    ax.xaxis.set_major_formatter(formatter)
+    if not show_offset_text:
+        ax.xaxis.get_offset_text().set_visible(False)
+    add_credit(ax)
+
+    return fig, ax
+
+
+def surphys_timeseries_grid(data, dpi=300, figsize=[9.6, 7.2]):
+    """Draw time-series plots for all variables as subplots of a single figure.
+
+    Parameters
+    ----------
+    data : xarray Dataset.
+        The dataset, opened with cmems.open_surphys(), at a single time point.
+    dpi : int, optional
+        Figure resolution in dots per inch, by default 300.
+    figsize : list, optional
+        Figure size in inches, by default [9.6, 7.2].
+
+    Returns
+    -------
+    matplotlib figure
+        The generated matplotlib figure.
+    matplotlib axis
+        The generated matplotlib axes.
+    """
+    fig, axs = plt.subplots(nrows=3, ncols=2, dpi=dpi, figsize=figsize)
+    fvars = ["theta", "salinity", "ssh", None, "mld", "current"]
+    letters = "abcdef"
+    for ax, fvar, letter in zip(axs.ravel(), fvars, letters):
+        if fvar:
+            surphys_timeseries(data, fvar, ax=ax)
+            ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
+        else:
+            ax.set_visible(False)
+    plt.tight_layout()
+    return fig, axs

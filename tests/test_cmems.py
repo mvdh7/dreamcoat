@@ -1,22 +1,23 @@
 import numpy as np
 import dreamcoat as dc
+from matplotlib import pyplot as plt
 
 
 # boxros-6qacgu-bUqmyr
 
 lims = dict(
-    date_min="2021-05-20",
-    date_max="2021-06-08",
-    longitude_min=-10,
-    longitude_max=10,
-    latitude_min=55,
-    latitude_max=65,
+    date_min="2021-01-20",
+    date_max="2021-02-10",
+    longitude_min=-70,
+    longitude_max=30,
+    latitude_min=-40,
+    latitude_max=-20,
 )
 # dc.cmems.download_surphys(
 # filepath="tests/data/",
 # **lims,
 # )
-phys = dc.cmems.open_surphys(
+surphys = dc.cmems.open_surphys(
     filepath="tests/data/",
     **lims,
 )
@@ -29,18 +30,52 @@ ship_distance = (
 )
 
 #%%
-for i in range(20):
-    fig, ax = dc.plot.surphys(
-        # phys.mean('time'),
-        phys.isel(time=i),
-        "current_speed",
+mooring_lon_lat = [10.02, -38.41]
+
+for i in range(surphys.time.size):
+    fig, ax = dc.plot.surphys_map(
+        # surphys.mean('time'),
+        surphys.isel(time=i),
+        "theta",
         land_visible=False,
-        # ship_longitude=0,
-        # ship_latitude=-35,
-        # ship_distance=ship_distance,
+        ship_lon_lat=mooring_lon_lat,
+        ship_distance=10,
         # quiver_coarsen=20,
         # quiver_alpha=0.1,
-        map_extent=[-3, 10, 57, 64],
-        # vmin=0,
-        # vmax=1,
+        map_extent=[5, 15, -40, -35],
+        vmin=13,
+        vmax=24,
     )
+    plt.show()
+    plt.close()
+
+
+#%%
+
+fvar = "ssh"
+f_surphys = surphys.sel(
+    longitude=mooring_lon_lat[0], latitude=mooring_lon_lat[1], method="nearest"
+).isel(depth=0)
+
+fig, ax = dc.plot.surphys_timeseries(f_surphys, fvar)
+
+# f_surphys.sel(
+#     longitude=mooring_lon_lat[0], latitude=mooring_lon_lat[1], method="nearest"
+# ).isel(depth=0)[fvar].plot(ax=ax)
+
+#%%
+fig, axs = dc.plot.surphys_timeseries_grid(f_surphys)
+
+#%% Polar
+
+
+fig = plt.figure(dpi=300)
+ax = fig.add_subplot(111, projection="polar")
+
+# Correct angle orientation
+ax.set_theta_zero_location("N")
+ax.set_theta_direction(-1)
+
+dc.plot.add_credit(ax)
+
+# ax.scatter(np.deg2rad(90), f_surphys.current_speed)
