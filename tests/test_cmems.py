@@ -36,15 +36,19 @@ for i in range(surphys.time.size):
     fig, ax = dc.plot.surphys_map(
         # surphys.mean('time'),
         surphys.isel(time=i),
-        "ssh",
+        "mld",
         land_visible=False,
         ship_lon_lat=mooring_lon_lat,
         ship_distance=10,
         # quiver_coarsen=20,
         # quiver_alpha=0.1,
         map_extent=[5, 15, -40, -35],
-        vmin=13,
-        vmax=24,
+        # vmin=13,
+        # vmax=24,
+        # vmin=0,
+        # vmax=0.3,
+        vmin=0,
+        vmax=80,
     )
     plt.show()
     plt.close()
