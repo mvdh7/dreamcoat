@@ -631,11 +631,21 @@ def surphys_currents(data, dpi=300, figsize=[6.4, 4.8]):
     # Create and draw coloured lines
     norm = plt.Normalize(it.min(), it.max())
     lc = LineCollection(
-        segments, cmap="viridis", norm=norm, path_effects=[pe.Stroke(capstyle="round")]
+        segments,
+        cmap="viridis",
+        norm=norm,
+        zorder=11,
+        path_effects=[pe.Stroke(capstyle="round")],
     )
     lc.set_array(it)
-    lc.set_linewidth(5)
+    lc.set_linewidth(3)
     line = ax.add_collection(lc)
+
+    # Scatter points
+    theta, rho = convert.cartesian_to_polar(
+        data.current_east.data, data.current_north.data
+    )
+    ax.scatter(theta, rho, c=mdates.date2num(data.time.data), s=25, zorder=10)
 
     # # Colorbar
     # plt.colorbar(line, location='right')
