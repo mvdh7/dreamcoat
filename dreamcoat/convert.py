@@ -85,3 +85,47 @@ def km_to_nm(km):
         Distance in nautical miles.
     """
     return km / 1.852
+
+
+def cartesian_to_polar(x, y):
+    """Convert from Cartesian to polar co-ordinates.
+
+    Parameters
+    ----------
+    x : float
+        x-axis value in Cartesian co-ordinates.
+    y : float
+        y-axis value in Cartesian co-ordinates.
+
+    Returns
+    -------
+    theta
+        Angle in polar co-ordinates.
+    rho
+        Radius in polar co-ordinates.
+    """
+    rho = np.sqrt(x**2 + y**2)
+    theta = np.arctan2(y, x)
+    return theta, rho
+
+
+def polar_to_cartesian(theta, rho):
+    """Convert from polar to Cartesian co-ordinates.
+
+    Parameters
+    ----------
+    theta
+        Angle in polar co-ordinates.
+    rho
+        Radius in polar co-ordinates.
+
+    Returns
+    -------
+    x : float
+        x-axis value in Cartesian co-ordinates.
+    y : float
+        y-axis value in Cartesian co-ordinates.
+    """
+    x = rho * np.cos(theta)
+    y = rho * np.sin(theta)
+    return x, y
