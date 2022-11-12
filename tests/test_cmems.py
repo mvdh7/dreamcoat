@@ -8,10 +8,10 @@ from matplotlib import pyplot as plt
 lims = dict(
     date_min="2021-01-20",
     date_max="2021-02-10",
-    longitude_min=-70,
+    longitude_min=-20,
     longitude_max=30,
-    latitude_min=-40,
-    latitude_max=-20,
+    latitude_min=-50,
+    latitude_max=-25,
 )
 # dc.cmems.download_surphys(
 # filepath="tests/data/",
@@ -36,19 +36,19 @@ for i in range(surphys.time.size):
     fig, ax = dc.plot.surphys_map(
         # surphys.mean('time'),
         surphys.isel(time=i),
-        "mld",
-        land_visible=False,
+        "current_speed",
+        land_visible=True,
         ship_lon_lat=mooring_lon_lat,
         ship_distance=10,
         # quiver_coarsen=20,
         # quiver_alpha=0.1,
-        map_extent=[5, 15, -40, -35],
+        # map_extent=[5, 15, -40, -35],
         # vmin=13,
         # vmax=24,
         # vmin=0,
         # vmax=0.3,
-        vmin=0,
-        vmax=80,
+        # vmin=0,
+        # vmax=80,
     )
     plt.show()
     plt.close()
