@@ -347,7 +347,7 @@ def surphys_map(
     # Show land areas
     if land_visible:
         ax.add_feature(
-            cfeature.NaturalEarthFeature("dataical", "land", "10m"),
+            cfeature.NaturalEarthFeature("physical", "land", "10m"),
             edgecolor="none",
             facecolor=np.array([1, 1, 1]) * 0.1,
         )
