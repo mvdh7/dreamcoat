@@ -1,2 +1,3 @@
 # dreamcoat
-Joyful Oceanographic Seagoing Expedition Planning Helper
+
+The joyful oceanographic seagoing expedition planning helper
