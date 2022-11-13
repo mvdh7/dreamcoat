@@ -49,6 +49,8 @@ for i in range(surphys.time.size):
         # vmax=0.3,
         # vmin=0,
         # vmax=80,
+        save_figure=True,
+        save_path="tests/figures/{}_".format(i),
     )
     plt.show()
     plt.close()
@@ -76,6 +78,4 @@ plt.axhline(0)
 plt.axvline(0)
 
 #%% Polar
-
-
 dc.plot.surphys_currents(f_surphys)

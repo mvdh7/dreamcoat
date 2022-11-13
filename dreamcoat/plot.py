@@ -130,7 +130,7 @@ def surphys_map(
     fvar,
     ax=None,
     color_zoom_factor=0.9,
-    dpi=300,
+    dpi=150,
     figsize=[6.4, 4.8],
     land_visible=True,
     longitude_fmt=":03.0f",
@@ -430,7 +430,7 @@ def surphys_timeseries(
     data,
     fvar,
     ax=None,
-    dpi=300,
+    dpi=150,
     figsize=[6.4, 4.8],
     draw_line=True,
     draw_points=True,
@@ -549,7 +549,7 @@ def surphys_timeseries(
     return fig, ax
 
 
-def surphys_timeseries_grid(data, dpi=300, figsize=[9.6, 7.2]):
+def surphys_timeseries_grid(data, dpi=150, figsize=[9.6, 7.2]):
     """Draw time-series plots for all variables as subplots of a single figure.
 
     Parameters
@@ -596,7 +596,7 @@ def _get_surphys_currents_line(data, interpolate_pchip):
     return it, ftheta, frho
 
 
-def surphys_currents(data, dpi=300, figsize=[6.4, 4.8]):
+def surphys_currents(data, dpi=150, figsize=[6.4, 4.8]):
     """Draw a polar plot of surface currents, coloured by date.
 
     Parameters
@@ -616,7 +616,7 @@ def surphys_currents(data, dpi=300, figsize=[6.4, 4.8]):
         The generated matplotlib axis.
     """
     # Initialise figure
-    fig = plt.figure(dpi=300)
+    fig = plt.figure(dpi=150)
     ax = fig.add_subplot(111, projection="polar")
 
     # Get points in cartesian coordinates
