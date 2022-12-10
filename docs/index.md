@@ -1,4 +1,4 @@
-# Welcome to MkDocs
+# dreamcoat
 
 For full documentation visit [mkdocs.org](https://www.mkdocs.org).
 
