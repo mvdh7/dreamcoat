@@ -1,4 +1,36 @@
 site_name: dreamcoat
+repo_url: https://github.com/mvdh7/dreamcoat
+repo_name: mvdh7/dreamcoat
+
+nav:
+  - Overview: index.md
+  # - CMEMS: cmems.md
 
 theme:
   name: material
+  palette:
+    scheme: dreamcoat-red
+  features:
+    - navigation.instant
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+plugins:
+  - search
+
+extra_css:
+  - stylesheets/colours.css

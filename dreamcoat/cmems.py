@@ -27,8 +27,8 @@ def get_surphys_filename(
 
     Returns
     -------
-    _type_
-        _description_
+    str
+        The filename for the specified date and location ranges.
     """
     if not date_min:
         date_min = date.today().strftime("%Y-%m-%d")
