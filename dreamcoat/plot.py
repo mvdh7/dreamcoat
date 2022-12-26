@@ -122,6 +122,11 @@ var_settings = {
         label="Potential temperature / °C",
         ship_color="xkcd:aqua",
     ),
+    "talk": dict(
+        cmap="viridis",
+        label="Total alkalinity / mmol/kg",
+        ship_color="xkcd:strawberry",
+    ),
 }
 
 
@@ -224,43 +229,90 @@ def surphys_map(
             data_extent = data.copy()
     else:
         data_extent = data.copy()
-    salinity_range = data_extent.salinity.max() - data_extent.salinity.min()
-    theta_range = data_extent.theta.max() - data_extent.salinity.min()
-    fvar_settings = {
-        "current_east": dict(
-            vmin=-np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
-            vmax=np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
-        ),
-        "current_north": dict(
-            vmin=-np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
-            vmax=np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
-        ),
-        "current_speed": dict(
-            vmin=0,
-            vmax=data_extent.current_speed.max() * color_zoom_factor,
-        ),
-        "mld": dict(
-            vmin=0,
-            vmax=data_extent.mld.max() * color_zoom_factor,
-        ),
-        "salinity": dict(
-            vmin=data_extent.salinity.min()
-            + salinity_range * (1 - color_zoom_factor) / 2,
-            vmax=data_extent.salinity.max()
-            - salinity_range * (1 - color_zoom_factor) / 2,
-        ),
-        "ssh": dict(
-            vmin=-np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
-            vmax=np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
-        ),
-        "theta": dict(
-            vmin=data_extent.theta.min() + theta_range * (1 - color_zoom_factor) / 2,
-            vmax=data_extent.theta.max() - theta_range * (1 - color_zoom_factor) / 2,
-        ),
-    }
+    fvar_settings = {}
+    if "current_east" in data:
+        fvar_settings.update(
+            {
+                "current_east": dict(
+                    vmin=-np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
+                    vmax=np.max(np.abs(data_extent.current_east)) * color_zoom_factor,
+                )
+            }
+        )
+    if "current_north" in data:
+        fvar_settings.update(
+            {
+                "current_north": dict(
+                    vmin=-np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
+                    vmax=np.max(np.abs(data_extent.current_north)) * color_zoom_factor,
+                )
+            }
+        )
+    if "current_speed" in data:
+        fvar_settings.update(
+            {
+                "current_speed": dict(
+                    vmin=0,
+                    vmax=data_extent.current_speed.max() * color_zoom_factor,
+                )
+            }
+        )
+    if "mld" in data:
+        fvar_settings.update(
+            {
+                "mld": dict(
+                    vmin=0,
+                    vmax=data_extent.mld.max() * color_zoom_factor,
+                )
+            }
+        )
+    if "salinity" in data:
+        salinity_range = data_extent.salinity.max() - data_extent.salinity.min()
+        fvar_settings.update(
+            {
+                "salinity": dict(
+                    vmin=data_extent.salinity.min()
+                    + salinity_range * (1 - color_zoom_factor) / 2,
+                    vmax=data_extent.salinity.max()
+                    - salinity_range * (1 - color_zoom_factor) / 2,
+                )
+            }
+        )
+    if "ssh" in data:
+        fvar_settings.update(
+            {
+                "ssh": dict(
+                    vmin=-np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
+                    vmax=np.max(np.abs(data_extent.ssh)) * color_zoom_factor,
+                )
+            }
+        )
+    if "theta" in data:
+        theta_range = data_extent.theta.max() - data_extent.theta.min()
+        fvar_settings.update(
+            {
+                "theta": dict(
+                    vmin=data_extent.theta.min()
+                    + theta_range * (1 - color_zoom_factor) / 2,
+                    vmax=data_extent.theta.max()
+                    - theta_range * (1 - color_zoom_factor) / 2,
+                )
+            }
+        )
+    if "talk" in data:
+        talk_range = data_extent.talk.max() - data_extent.talk.min()
+        fvar_settings.update(
+            {
+                "talk": dict(
+                    vmin=data_extent.talk.min()
+                    + talk_range * (1 - color_zoom_factor) / 2,
+                    vmax=data_extent.talk.max()
+                    - talk_range * (1 - color_zoom_factor) / 2,
+                )
+            }
+        )
     for k in fvar_settings:
         fvar_settings[k].update(var_settings[k])
-
     # Finalise settings for the selected variable
     fs = fvar_settings[fvar].copy()
     if ship_color is not None:

@@ -6,8 +6,8 @@ from matplotlib import pyplot as plt
 # t8Ejkp-boxros-6qacgu-bUqmyr-i3jIls
 
 lims = dict(
-    date_min="2021-01-20",
-    date_max="2021-02-10",
+    date_min="2022-12-26",
+    date_max="2022-12-30",
     longitude_min=-20,
     longitude_max=30,
     latitude_min=-50,
@@ -21,7 +21,10 @@ surphys = dc.cmems.open_surphys(
     filepath="tests/data/",
     **lims,
 )
-
+surbio = dc.cmems.open_surbio(
+    filepath="tests/data/",
+    **lims,
+)
 
 speed_knots = 9
 timestep_hours = 24
@@ -35,8 +38,8 @@ mooring_lon_lat = [10.02, -38.41]
 for i in range(surphys.time.size):
     fig, ax = dc.plot.surphys_map(
         # surphys.mean('time'),
-        surphys.isel(time=i),
-        "current_speed",
+        surbio.isel(time=i),
+        "talk",
         land_visible=True,
         ship_lon_lat=mooring_lon_lat,
         ship_distance=10,
@@ -58,7 +61,7 @@ for i in range(surphys.time.size):
 
 #%%
 
-fvar = "ssh"
+fvar = "current"
 f_surphys = surphys.sel(
     longitude=mooring_lon_lat[0], latitude=mooring_lon_lat[1], method="nearest"
 ).isel(depth=0)
