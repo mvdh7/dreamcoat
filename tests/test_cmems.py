@@ -39,10 +39,10 @@ for i in range(surphys.time.size):
     fig, ax = dc.plot.surphys_map(
         # surphys.mean('time'),
         surbio.isel(time=i),
-        "talk",
+        "chl",
         land_visible=True,
         ship_lon_lat=mooring_lon_lat,
-        ship_distance=10,
+        ship_distance=100,
         # quiver_coarsen=20,
         # quiver_alpha=0.1,
         # map_extent=[5, 15, -40, -35],

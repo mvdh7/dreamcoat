@@ -127,6 +127,41 @@ var_settings = {
         label="Total alkalinity / mmol/kg",
         ship_color="xkcd:strawberry",
     ),
+    "ph": dict(
+        cmap='plasma_r',
+        label='pH',
+        ship_color='xkcd:cyan',
+    ),
+    "no3": dict(
+        cmap='magma',
+        label='Nitrate / µmol/kg',
+        ship_color='xkcd:cyan',
+    ),
+    "po4": dict(
+        cmap='magma',
+        label='Phosphate / µmol/kg',
+        ship_color='xkcd:cyan',
+    ),
+    "si": dict(
+        cmap='magma',
+        label='Silicate / µmol/kg',
+        ship_color='xkcd:cyan',
+    ),
+    "fe": dict(
+        cmap='magma',
+        label='Iron / nmol/kg',
+        ship_color='xkcd:cyan',
+    ),
+    "chl": dict(
+        cmap='magma',
+        label='Chlorophyll / ???',
+        ship_color='xkcd:cyan',
+    ),
+    "o2": dict(
+        cmap='cividis',
+        label='Oxygen / µmol/kg',
+        ship_color='xkcd:strawberry',
+    ),
 }
 
 
@@ -155,7 +190,7 @@ def surphys_map(
     vmin=None,
     vmax=None,
 ):
-    """Plot a surface physics dataset from CMEMS.
+    """Plot a surface physics or biogeochemistry dataset from CMEMS.
 
     Parameters
     ----------
@@ -257,15 +292,16 @@ def surphys_map(
                 )
             }
         )
-    if "mld" in data:
-        fvar_settings.update(
-            {
-                "mld": dict(
-                    vmin=0,
-                    vmax=data_extent.mld.max() * color_zoom_factor,
-                )
-            }
-        )
+    for v in ["mld", 'no3', 'po4', 'si', 'fe', 'chl']:
+        if v in data:
+            fvar_settings.update(
+                {
+                    v: dict(
+                        vmin=0,
+                        vmax=data_extent[v].max() * color_zoom_factor,
+                    )
+                }
+            )
     if "salinity" in data:
         salinity_range = data_extent.salinity.max() - data_extent.salinity.min()
         fvar_settings.update(
@@ -299,18 +335,19 @@ def surphys_map(
                 )
             }
         )
-    if "talk" in data:
-        talk_range = data_extent.talk.max() - data_extent.talk.min()
-        fvar_settings.update(
-            {
-                "talk": dict(
-                    vmin=data_extent.talk.min()
-                    + talk_range * (1 - color_zoom_factor) / 2,
-                    vmax=data_extent.talk.max()
-                    - talk_range * (1 - color_zoom_factor) / 2,
-                )
-            }
-        )
+    for v in ['talk', 'ph', 'o2']:
+        if v in data:
+            var_range = data_extent[v].max() - data_extent[v].min()
+            fvar_settings.update(
+                {
+                    v: dict(
+                        vmin=data_extent[v].min()
+                        + var_range * (1 - color_zoom_factor) / 2,
+                        vmax=data_extent[v].max()
+                        - var_range * (1 - color_zoom_factor) / 2,
+                    )
+                }
+            )
     for k in fvar_settings:
         fvar_settings[k].update(var_settings[k])
     # Finalise settings for the selected variable
