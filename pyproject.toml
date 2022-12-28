@@ -7,10 +7,14 @@ name = "dreamcoat"
 description = "The joyful oceanographic seagoing expedition planning helper"
 readme = "README.md"
 dependencies = [
+    "calkulate",
     "cartopy",
+    "koolstof",
     "matplotlib",
     "motuclient",
     "netcdf4",
+    "numpy",
+    "scipy",
     "xarray",
     "yagmail",
 ]
