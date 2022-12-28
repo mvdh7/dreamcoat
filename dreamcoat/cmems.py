@@ -2,6 +2,7 @@ import os
 from datetime import date
 import numpy as np
 import xarray as xr
+import calkulate as calk
 
 
 def get_surphys_filename(
@@ -303,7 +304,7 @@ def open_surphys(
             "zos": "ssh",
         }
     )
-    return cmems
+    return cmems.isel(depth=0)
 
 
 def open_surbio(
@@ -319,10 +320,6 @@ def open_surbio(
 ):
     """Open a CMEMS data file from the GLOBAL_ANALYSIS_FORECAST_BIO_001_028 dataset,
     downloading it first if it's not already available in the provided filepath.
-    # Output dataset includes surface fields of practical salinity (salinity), potential
-    # temperature in °C (theta), mixed layer depth in m (mld), sea surface height in m
-    # (ssh), eastwards (current_east) and northwards (current_north) current velocities in
-    # m/s, and total current speed in m/s (current_speed).
 
     Parameters
     ----------
@@ -370,4 +367,127 @@ def open_surbio(
             password=password,
         )
         cmems = xr.open_dataset(filepath + filename)
-    return cmems
+    return cmems.isel(depth=0)
+
+
+def open_surface(
+    filepath="",
+    date_min=None,
+    date_max=None,
+    latitude_min=-90,
+    latitude_max=90,
+    longitude_min=-180,
+    longitude_max=180,
+    username=None,
+    password=None,
+):
+    """Open CMEMS data files from the GLOBAL_ANALYSIS_FORECAST_PHY_001_024 and
+    GLOBAL_ANALYSIS_FORECAST_BIO_001_028 datasets, downloading them first if they're
+    not already available in the provided filepath.  Combine both datasets together,
+    nearest-neighbour interpolating the lower-resolution biogeochemical dataset to
+    match the physical dataset's spatial grid.  Adjust the units of the biogeochemical
+    variables to more usual ones.
+
+    Parameters
+    ----------
+    filepath : str, optional
+        File path for the saved files, by default "".
+    date_min : str, optional
+        First date of data to download in '%Y-%m-%d' format, by default None, in which
+        case today's date is used.
+    date_max : str, optional
+        Last date of data to download in '%Y-%m-%d' format, by default None, in which
+        case today's date is used.
+    latitude_min : int, optional
+        Minimum latitude in decimal degrees N, by default -90.
+    latitude_max : int, optional
+        Maximum latitude in decimal degrees N, by default 90.
+    longitude_min : int, optional
+        Minimum longitude in decimal degrees E, by default -180.
+    longitude_max : int, optional
+        Maximum longitude in decimal degrees E, by default 180.
+    username : str, optional
+        Your CMEMS username, by default None, in which case you will be prompted for it.
+    password : str, optional
+        Your CMEMS password, by default None, in which case you will be prompted for it.
+
+    Returns
+    -------
+    surface
+        An xarray Dataset containing the requested data.
+    """
+    # Download / open the physical and biological datasets
+    surface = open_surphys(
+        filepath=filepath,
+        date_min=date_min,
+        date_max=date_max,
+        latitude_min=latitude_min,
+        latitude_max=latitude_max,
+        longitude_min=longitude_min,
+        longitude_max=longitude_max,
+        username=username,
+        password=password,
+    )
+    surface_bio = open_surbio(
+        filepath=filepath,
+        date_min=date_min,
+        date_max=date_max,
+        latitude_min=latitude_min,
+        latitude_max=latitude_max,
+        longitude_min=longitude_min,
+        longitude_max=longitude_max,
+        username=username,
+        password=password,
+    )
+    # Copy all surface_bio fields into surface, interpolating with nearest neighbour
+    # to match the higher resolution of the physical dataset
+    for k, v in surface_bio.items():
+        surface[k] = v.interp_like(surface.theta, method="nearest")
+    # Convert concentrations (per m3) to substance contents (per kg)
+    surface["density"] = calk.density.seawater_1atm_MP81(
+        temperature=surface.theta, salinity=surface.salinity
+    )
+    surface["density"].attrs.update(
+        {
+            "units": "kg dm-3",
+            "unit_long": "kilograms per cubic decimetre",
+        }
+    )
+    dvars = [
+        "o2",
+        "no3",
+        "po4",
+        "si",
+        "talk",
+        "dissic",
+        "fe",
+    ]
+    for v in dvars:
+        surface[v] /= surface.density
+    # Adjust other units to PyCO2SYS standards
+    surface["talk"] *= 1e3  # now µmol/kg
+    surface["dissic"] *= 1e3  # now µmol/kg
+    surface["spco2"] /= 101325e-6  # now µatm
+    surface["fe"] *= 1e3  # now nmol/kg
+    # Update Dataset attributes to reflect adjusted units
+    umolkg = ["talk", "dissic", "o2", "no3", "po4", "si"]
+    for v in umolkg:
+        surface[v].attrs.update(
+            {
+                "units": "µmol kg-1",
+                "unit_long": "micromoles per kilogram seawater",
+            }
+        )
+    surface["fe"].attrs.update(
+        {
+            "units": "nmol kg-1",
+            "unit_long": "nanomoles per kilogram seawater",
+        }
+    )
+    surface["spco2"].attrs.update(
+        {
+            "units": "µatm",
+            "unit_long": "microatmospheres",
+        }
+    )
+    return surface

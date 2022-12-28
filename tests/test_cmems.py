@@ -17,14 +17,8 @@ lims = dict(
 # filepath="tests/data/",
 # **lims,
 # )
-surphys = dc.cmems.open_surphys(
-    filepath="tests/data/",
-    **lims,
-)
-surbio = dc.cmems.open_surbio(
-    filepath="tests/data/",
-    **lims,
-)
+
+surface = dc.cmems.open_surface(filepath="tests/data/", **lims)
 
 speed_knots = 9
 timestep_hours = 24
@@ -32,53 +26,66 @@ ship_distance = (
     dc.convert.knots_to_kph(speed_knots) * timestep_hours * np.array([1, 2, 3])
 )
 
+# surphys['dissic'] = surbio.dissic.interp_like(surphys.theta, method='nearest')
+
 #%%
 mooring_lon_lat = [10.02, -38.41]
 
-for i in range(surphys.time.size):
-    fig, ax = dc.plot.surphys_map(
-        # surphys.mean('time'),
-        surbio.isel(time=i),
-        "chl",
+for i in range(surface.time.size):
+    fig, ax = dc.plot.surface_map(
+        # surface.mean('time'),
+        surface.isel(time=i),
+        "ssh",
         land_visible=True,
         ship_lon_lat=mooring_lon_lat,
-        ship_distance=100,
+        ship_distance=ship_distance[0],
         # quiver_coarsen=20,
         # quiver_alpha=0.1,
-        # map_extent=[5, 15, -40, -35],
+        map_extent=[5, 15, -40, -35],
         # vmin=13,
         # vmax=24,
         # vmin=0,
         # vmax=0.3,
         # vmin=0,
         # vmax=80,
-        save_figure=True,
-        save_path="tests/figures/{}_".format(i),
+        # vmin=7.98,
+        # vmax=8.14,
+        # save_figure=True,
+        # save_path="tests/figures/{}_".format(i),
     )
     plt.show()
     plt.close()
 
+#%%
+dc.plot.surface_map_daily(
+    surface,
+    "theta",
+    save_figure=True,
+    save_path="tests/figures/",
+    # map_extent=[5, 15, -40, -35],
+    # ship_lon_lat=mooring_lon_lat,
+    ship_distance=ship_distance[0],
+)
 
 #%%
-
 fvar = "current"
-f_surphys = surphys.sel(
+f_surface = surface.sel(
     longitude=mooring_lon_lat[0], latitude=mooring_lon_lat[1], method="nearest"
-).isel(depth=0)
+)
 
-fig, ax = dc.plot.surphys_timeseries(f_surphys, fvar)
+fig, ax = dc.plot.surface_timeseries(f_surface, fvar)
 
-# f_surphys.sel(
+# f_surface.sel(
 #     longitude=mooring_lon_lat[0], latitude=mooring_lon_lat[1], method="nearest"
 # ).isel(depth=0)[fvar].plot(ax=ax)
 
 #%%
-fig, axs = dc.plot.surphys_timeseries_grid(f_surphys)
+fig, axs = dc.plot.surface_timeseries_grid(f_surface)
 
 #%%
-plt.plot(f_surphys.current_east, f_surphys.current_north)
+plt.plot(f_surface.current_east, f_surface.current_north)
 plt.axhline(0)
 plt.axvline(0)
 
 #%% Polar
-dc.plot.surphys_currents(f_surphys)
+dc.plot.surface_currents(f_surface)
