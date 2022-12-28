@@ -4,9 +4,9 @@ repo_name: mvdh7/dreamcoat
 
 nav:
   - Overview: index.md
-  - CMEMS: cmems.md
+  - CMEMS datasets: cmems.md
   - Sending plots: send.md
-  - Versions: versions.md
+  - Version history: versions.md
 
 theme:
   name: material
