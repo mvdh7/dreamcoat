@@ -3,6 +3,7 @@ from datetime import date
 import numpy as np
 import xarray as xr
 import calkulate as calk
+import koolstof as ks
 
 
 def get_surphys_filename(
@@ -453,6 +454,7 @@ def open_surface(
             "unit_long": "kilograms per cubic decimetre",
         }
     )
+    surface["density_anomaly"] = (surface.density - 1) * 1e3
     dvars = [
         "o2",
         "no3",
@@ -488,6 +490,17 @@ def open_surface(
         {
             "units": "µatm",
             "unit_long": "microatmospheres",
+        }
+    )
+    # Calculate additional variables of interest
+    surface["aou"] = ks.aou_GG92(
+        oxygen=surface.o2, temperature=surface.theta, salinity=surface.salinity
+    )[0]
+    surface["aou"].attrs.update(
+        {
+            "long_name": "Apparent oxygen utilisation",
+            "units": "µmol kg-1",
+            "unit_long": "micromoles per kilogram seawater",
         }
     )
     return surface

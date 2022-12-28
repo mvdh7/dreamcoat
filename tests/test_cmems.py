@@ -1,6 +1,7 @@
 import numpy as np
 import dreamcoat as dc
-from matplotlib import pyplot as plt
+
+# from matplotlib import pyplot as plt
 
 
 # t8Ejkp-boxros-6qacgu-bUqmyr-i3jIls
@@ -31,35 +32,35 @@ ship_distance = (
 #%%
 mooring_lon_lat = [10.02, -38.41]
 
-for i in range(surface.time.size):
-    fig, ax = dc.plot.surface_map(
-        # surface.mean('time'),
-        surface.isel(time=i),
-        "ssh",
-        land_visible=True,
-        ship_lon_lat=mooring_lon_lat,
-        ship_distance=ship_distance[0],
-        # quiver_coarsen=20,
-        # quiver_alpha=0.1,
-        map_extent=[5, 15, -40, -35],
-        # vmin=13,
-        # vmax=24,
-        # vmin=0,
-        # vmax=0.3,
-        # vmin=0,
-        # vmax=80,
-        # vmin=7.98,
-        # vmax=8.14,
-        # save_figure=True,
-        # save_path="tests/figures/{}_".format(i),
-    )
-    plt.show()
-    plt.close()
+# for i in range(surface.time.size):
+#     fig, ax = dc.plot.surface_map(
+#         # surface.mean('time'),
+#         surface.isel(time=i),
+#         "ssh",
+#         land_visible=True,
+#         ship_lon_lat=mooring_lon_lat,
+#         ship_distance=ship_distance[0],
+#         # quiver_coarsen=20,
+#         # quiver_alpha=0.1,
+#         map_extent=[5, 15, -40, -35],
+#         # vmin=13,
+#         # vmax=24,
+#         # vmin=0,
+#         # vmax=0.3,
+#         # vmin=0,
+#         # vmax=80,
+#         # vmin=7.98,
+#         # vmax=8.14,
+#         # save_figure=True,
+#         # save_path="tests/figures/{}_".format(i),
+#     )
+#     plt.show()
+#     plt.close()
 
 #%%
 dc.plot.surface_map_daily(
     surface,
-    "theta",
+    "ph",
     save_figure=True,
     save_path="tests/figures/",
     # map_extent=[5, 15, -40, -35],
@@ -68,7 +69,7 @@ dc.plot.surface_map_daily(
 )
 
 #%%
-fvar = "current"
+fvar = "dissic"
 f_surface = surface.sel(
     longitude=mooring_lon_lat[0], latitude=mooring_lon_lat[1], method="nearest"
 )
@@ -80,12 +81,7 @@ fig, ax = dc.plot.surface_timeseries(f_surface, fvar)
 # ).isel(depth=0)[fvar].plot(ax=ax)
 
 #%%
-fig, axs = dc.plot.surface_timeseries_grid(f_surface)
-
-#%%
-plt.plot(f_surface.current_east, f_surface.current_north)
-plt.axhline(0)
-plt.axvline(0)
+dc.plot.surface_timeseries_grids(f_surface)
 
 #%% Polar
 dc.plot.surface_currents(f_surface)

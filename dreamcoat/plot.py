@@ -183,13 +183,23 @@ var_settings = {
     ),
     "phyc": dict(
         cmap="viridis",
-        label="Phytoplankton biomass / mmol-C m$^{-3}$",
+        label="Phytoplankton / mmol-C m$^{-3}$",
         ship_color="xkcd:strawberry",
     ),
     "density": dict(
         cmap="viridis",
         label="Density / kg dm$^{-3}$",
         ship_color="xkcd:strawberry",
+    ),
+    "density_anomaly": dict(
+        cmap="viridis",
+        label="Density anomaly / kg m$^{-3}$",
+        ship_color="xkcd:strawberry",
+    ),
+    "aou": dict(
+        cmap="RdBu",
+        label="AOU / µmol kg$^{-1}$",
+        ship_color="xkcd:green",
     ),
 }
 
@@ -210,7 +220,8 @@ def _get_data_extent(data, map_extent):
 
 def _get_vmin_vmax(data_extent, color_zoom_factor):
     fvar_settings = {}
-    for v in ["current_east", "current_north", "ssh"]:
+    # Variables centred on zero with vmin = -vmax
+    for v in ["current_east", "current_north", "ssh", "aou"]:
         if v in data_extent:
             fvar_settings.update(
                 {
@@ -220,6 +231,7 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
                     )
                 }
             )
+    # Variables with lowest values close to, but not lower than, zero
     for v in ["mld", "no3", "po4", "si", "fe", "chl", "nppv", "phyc", "current_speed"]:
         if v in data_extent:
             fvar_settings.update(
@@ -230,7 +242,18 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
                     )
                 }
             )
-    for v in ["talk", "dissic", "ph", "o2", "spco2", "density", "theta", "salinity"]:
+    # Other variables
+    for v in [
+        "talk",
+        "dissic",
+        "ph",
+        "o2",
+        "spco2",
+        "density",
+        "theta",
+        "salinity",
+        "density_anomaly",
+    ]:
         if v in data_extent:
             var_range = data_extent[v].max() - data_extent[v].min()
             fvar_settings.update(
@@ -287,7 +310,7 @@ def surface_map(
         What fraction of the total range of values to show on the colour bar, by default
         0.9.
     dpi : int, optional
-        Figure resolution in dots per inch, by default 300.
+        Figure resolution in dots per inch, by default 150.
     figsize : list, optional
         Figure size in inches, by default [6.4, 4.8].
     land_visible : bool, optional
@@ -529,7 +552,7 @@ def surface_map_daily(
         What fraction of the total range of values to show on the colour bar, by default
         0.9.
     dpi : int, optional
-        Figure resolution in dots per inch, by default 300.
+        Figure resolution in dots per inch, by default 150.
     figsize : list, optional
         Figure size in inches, by default [6.4, 4.8].
     land_visible : bool, optional
@@ -639,12 +662,11 @@ def surface_timeseries(
     data : xarray Dataset.
         The dataset, opened with cmems.open_surface(), at a single time point.
     fvar : str
-        Which variable from the dataset to plot: 'theta', 'salinity', 'mld', 'ssh',
-        'current_east', 'current_north', 'current_speed' or 'current'.
+        Which variable from the dataset to plot.
     ax : matplotlib axes, optional
         An existing set of axes to plot onto, by default None.
     dpi : int, optional
-        Figure resolution in dots per inch, by default 300.
+        Figure resolution in dots per inch, by default 150.
     figsize : list, optional
         Figure size in inches, by default [6.4, 4.8].
     draw_line : bool, optional
@@ -744,15 +766,15 @@ def surface_timeseries(
     return fig, ax
 
 
-def surface_timeseries_grid(data, dpi=150, figsize=[9.6, 7.2]):
-    """Draw time-series plots for all variables as subplots of a single figure.
+def surface_timeseries_grid_phys(data, dpi=150, figsize=[9.6, 7.2]):
+    """Draw time-series plots for all physical variables as subplots of a single figure.
 
     Parameters
     ----------
     data : xarray Dataset.
-        The dataset, opened with cmems.open_surface(), at a single time point.
+        The dataset, opened with cmems.open_surface(), at a single point in space.
     dpi : int, optional
-        Figure resolution in dots per inch, by default 300.
+        Figure resolution in dots per inch, by default 150.
     figsize : list, optional
         Figure size in inches, by default [9.6, 7.2].
 
@@ -764,7 +786,7 @@ def surface_timeseries_grid(data, dpi=150, figsize=[9.6, 7.2]):
         The generated matplotlib axes.
     """
     fig, axs = plt.subplots(nrows=3, ncols=2, dpi=dpi, figsize=figsize)
-    fvars = ["theta", "salinity", "ssh", None, "mld", "current"]
+    fvars = ["theta", "salinity", "ssh", "density_anomaly", "mld", "current"]
     letters = "abcdef"
     for ax, fvar, letter in zip(axs.ravel(), fvars, letters):
         if fvar:
@@ -774,6 +796,120 @@ def surface_timeseries_grid(data, dpi=150, figsize=[9.6, 7.2]):
             ax.set_visible(False)
     plt.tight_layout()
     return fig, axs
+
+
+def surface_timeseries_grid_co2(data, dpi=150, figsize=[9.6, 4.8]):
+    """Draw time-series plots for all marine carbonate system variables as subplots of a
+    single figure.
+
+    Parameters
+    ----------
+    data : xarray Dataset.
+        The dataset, opened with cmems.open_surface(), at a single point in space.
+    dpi : int, optional
+        Figure resolution in dots per inch, by default 150.
+    figsize : list, optional
+        Figure size in inches, by default [9.6, 7.2].
+
+    Returns
+    -------
+    matplotlib figure
+        The generated matplotlib figure.
+    matplotlib axis
+        The generated matplotlib axes.
+    """
+    fig, axs = plt.subplots(nrows=2, ncols=2, dpi=dpi, figsize=figsize)
+    fvars = ["talk", "dissic", "ph", "spco2"]
+    letters = "abcdef"
+    for ax, fvar, letter in zip(axs.ravel(), fvars, letters):
+        if fvar:
+            surface_timeseries(data, fvar, ax=ax)
+            ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
+        else:
+            ax.set_visible(False)
+    plt.tight_layout()
+    return fig, axs
+
+
+def surface_timeseries_grid_bio(data, dpi=150, figsize=[9.6, 4.8]):
+    """Draw time-series plots for all biological variables as subplots of a single
+    figure.
+
+    Parameters
+    ----------
+    data : xarray Dataset.
+        The dataset, opened with cmems.open_surface(), at a single point in space.
+    dpi : int, optional
+        Figure resolution in dots per inch, by default 150.
+    figsize : list, optional
+        Figure size in inches, by default [9.6, 7.2].
+
+    Returns
+    -------
+    matplotlib figure
+        The generated matplotlib figure.
+    matplotlib axis
+        The generated matplotlib axes.
+    """
+    fig, axs = plt.subplots(nrows=2, ncols=2, dpi=dpi, figsize=figsize)
+    fvars = ["phyc", "nppv", "chl", "o2"]
+    letters = "abcdef"
+    for ax, fvar, letter in zip(axs.ravel(), fvars, letters):
+        if fvar:
+            surface_timeseries(data, fvar, ax=ax)
+            ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
+        else:
+            ax.set_visible(False)
+    plt.tight_layout()
+    return fig, axs
+
+
+def surface_timeseries_grid_nuts(data, dpi=150, figsize=[9.6, 4.8]):
+    """Draw time-series plots for all nutrient variables as subplots of a single figure.
+
+    Parameters
+    ----------
+    data : xarray Dataset.
+        The dataset, opened with cmems.open_surface(), at a single point in space.
+    dpi : int, optional
+        Figure resolution in dots per inch, by default 150.
+    figsize : list, optional
+        Figure size in inches, by default [9.6, 7.2].
+
+    Returns
+    -------
+    matplotlib figure
+        The generated matplotlib figure.
+    matplotlib axis
+        The generated matplotlib axes.
+    """
+    fig, axs = plt.subplots(nrows=2, ncols=2, dpi=dpi, figsize=figsize)
+    fvars = ["no3", "po4", "si", "fe"]
+    letters = "abcdef"
+    for ax, fvar, letter in zip(axs.ravel(), fvars, letters):
+        if fvar:
+            surface_timeseries(data, fvar, ax=ax)
+            ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
+        else:
+            ax.set_visible(False)
+    plt.tight_layout()
+    return fig, axs
+
+
+def surface_timeseries_grids(data, dpi=150):
+    """Draw all time-series grid figures.
+
+    Parameters
+    ----------
+    data : xarray Dataset.
+        The dataset, opened with cmems.open_surface(), at a single point in space.
+    dpi : int, optional
+        Figure resolution in dots per inch, by default 150.
+    """
+    surface_timeseries_grid_phys(data, dpi=dpi)
+    surface_timeseries_grid_co2(data, dpi=dpi)
+    surface_timeseries_grid_bio(data, dpi=dpi)
+    surface_timeseries_grid_nuts(data, dpi=dpi)
 
 
 def _get_surface_currents_line(data, interpolate_pchip):
@@ -799,7 +935,7 @@ def surface_currents(data, dpi=150, figsize=[6.4, 4.8]):
     data : xarray Dataset.
         The dataset, opened with cmems.open_surface(), at a single time point.
     dpi : int, optional
-        Figure resolution in dots per inch, by default 300.
+        Figure resolution in dots per inch, by default 150.
     figsize : list, optional
         Figure size in inches, by default [6.4, 4.8].
 
