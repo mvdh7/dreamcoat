@@ -4,7 +4,8 @@ repo_name: mvdh7/dreamcoat
 
 nav:
   - Overview: index.md
-  - CMEMS datasets: cmems.md
+  - CMEMS forecasts: cmems.md
+  - MODIS satellites: modis.md
   - Sending plots: send.md
   - Version history: versions.md
 

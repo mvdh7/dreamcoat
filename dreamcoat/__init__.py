@@ -1,2 +1,2 @@
-from . import convert, cmems, meta, plot, send
+from . import convert, cmems, meta, modis, plot, send
 from .meta import __version__, hello
