@@ -28,7 +28,7 @@ surface = dc.cmems.open_surface(
 ```
 
   * The `filepath` specifies where downloaded files should be saved.
-  * Dates should be given in `%Y-%m-%d` format.  If left blank, today is used.
+  * Dates should be given in `%Y-%m-%d` format.  If left blank, today is used for both.
   * Username and password should be your login details for the CMEMS data portal.  **Don't commit these to a public repo!**
 
 ## Plotting functions
