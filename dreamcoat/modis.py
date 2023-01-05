@@ -1,7 +1,8 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import xarray as xr, numpy as np
 
 satellites = {"AQUA": "A", "TERRA": "T"}
+variables = {"pic": "PIC", "poc": "POC"}
 
 
 def _get_modis_url_daily(satellite, year, month, day, resolution="9km"):
@@ -52,6 +53,33 @@ def get_modis_daily(
     longitude_max=180,
     resolution="9km",
 ):
+    """Download a single day of MODIS PIC data from both the Aqua and Terra satellites,
+    combining the results into a single xarray Dataset.
+
+    Parameters
+    ----------
+    year : int
+        The year to download data for.
+    month : int
+        The month to download data for.
+    day : int
+        The day to download data for.
+    latitude_min : float, optional
+        Minimum latitude to subset data, by default -90.
+    latitude_max : float, optional
+        Maximum latitude to subset data, by default 90.
+    longitude_min : float, optional
+        Minimum longitude to subset data, by default -180.
+    longitude_max : float, optional
+        Maximum longitude to subset data, by default 180.
+    resolution : str, optional
+        Resolution to download, can be "4km" or "9km", by default "9km".
+
+    Returns
+    -------
+    xarray.Dataset
+        The combined PIC dataset with units mol/m**3.
+    """
     modis_a = xr.open_dataset(
         _get_modis_url_daily("aqua", year, month, day, resolution=resolution)
     )
@@ -89,13 +117,13 @@ def get_modis_days_before(
     date_start = date_end - timedelta(days=days_before)
     modis = []
     for d in range(days_before + 1):
-        date = date_start + timedelta(days=d)
-        print("Getting MODIS data for {}...".format(date.strftime("%Y-%m-%d")))
+        date_now = date_start + timedelta(days=d)
+        print("Getting MODIS data for {}...".format(date_now.strftime("%Y-%m-%d")))
         modis.append(
             get_modis_daily(
-                date.year,
-                date.month,
-                date.day,
+                date_now.year,
+                date_now.month,
+                date_now.day,
                 latitude_min=latitude_min,
                 latitude_max=latitude_max,
                 longitude_min=longitude_min,
@@ -103,7 +131,71 @@ def get_modis_days_before(
                 resolution=resolution,
             )
         )
-        modis[d] = modis[d].expand_dims(dim={"date": [np.datetime64(date)]})
+        modis[d] = modis[d].expand_dims(dim={"date": [np.datetime64(date_now)]})
+    modis = xr.concat(modis, "date")
+    return modis
+
+
+def get_modis_days(
+    date_min=None,
+    date_max=None,
+    latitude_min=-90,
+    latitude_max=90,
+    longitude_min=-180,
+    longitude_max=180,
+    resolution="9km",
+):
+    """Download a series of days of MODIS PIC data, combining both the Aqua and Terra
+    satellites, and compile them into a single xarray Dataset.
+
+    Parameters
+    ----------
+    date_min : str, optional
+        First date of data to download in '%Y-%m-%d' format, by default None, in which
+        case yesterday is used.
+    date_max : str, optional
+        Last date of data to download in '%Y-%m-%d' format, by default None, in which
+        case yesterday is used.
+    latitude_min : float, optional
+        Minimum latitude to subset data, by default -90.
+    latitude_max : float, optional
+        Maximum latitude to subset data, by default 90.
+    longitude_min : float, optional
+        Minimum longitude to subset data, by default -180.
+    longitude_max : float, optional
+        Maximum longitude to subset data, by default 180.
+    resolution : str, optional
+        Resolution to download, can be "4km" or "9km", by default "9km".
+
+    Returns
+    -------
+    xarray.Dataset
+        The combined PIC dataset with units mol/m**3.
+    """
+    if date_min is None:
+        date_min = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+    if date_max is None:
+        date_max = (date.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+    date_start = datetime(*[int(x) for x in date_min.split("-")])
+    date_end = datetime(*[int(x) for x in date_max.split("-")])
+    days_before = (date_end - date_start).days
+    modis = []
+    for d in range(days_before + 1):
+        date_now = date_start + timedelta(days=d)
+        print("Getting MODIS data for {}...".format(date_now.strftime("%Y-%m-%d")))
+        modis.append(
+            get_modis_daily(
+                date_now.year,
+                date_now.month,
+                date_now.day,
+                latitude_min=latitude_min,
+                latitude_max=latitude_max,
+                longitude_min=longitude_min,
+                longitude_max=longitude_max,
+                resolution=resolution,
+            )
+        )
+        modis[d] = modis[d].expand_dims(dim={"date": [np.datetime64(date_now)]})
     modis = xr.concat(modis, "date")
     return modis
 
