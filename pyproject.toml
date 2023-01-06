@@ -9,14 +9,18 @@ readme = "README.md"
 dependencies = [
     "calkulate",
     "cartopy",
+    "fsspec",
+    "keyring",
     "koolstof",
     "matplotlib",
     "motuclient",
+    "napari",
     "netcdf4",
     "numpy",
     "scipy",
     "xarray",
     "yagmail",
+    "zarr",
 ]
 dynamic = ["version"]
 
