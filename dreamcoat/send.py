@@ -7,6 +7,7 @@ def all_files_from_dir(
     filepath=".",
     extension=".png",
     gmail_username=None,
+    gmail_password=None,
     separate=False,
     contents=None,
     subject="[dreamcoat] all_files_from_dir",
@@ -20,9 +21,12 @@ def all_files_from_dir(
         File path to send files from, by default ".".
     extension : str, optional
         File extension to send, by default ".png".
-    gmail_username : _type_, optional
+    gmail_username : str, optional
         Username of the sending gmail account, by default None, in which case this is
         taken from the .dreamcoat .dat files or the user is prompted for input.
+    gmail_password : str, optional
+        Password of the sending gmail account, by default None, in which case it is
+        requested from the keyring or asked of the user.
     separate : bool, optional
         Whether to send files in separate emails (True) or all together (False), by
         default False.
@@ -36,9 +40,14 @@ def all_files_from_dir(
     """
     if gmail_username is None:
         gmail_username = meta.get_dat_data("gmail_username")
+    if gmail_password is None:
+        gmail_password = meta.get_dat_data("gmail_password")
     if to is None:
         to = meta.get_dat_data("to")
-    yag = yagmail.SMTP(gmail_username)
+    if gmail_password is None:
+        yag = yagmail.SMTP(gmail_username)
+    else:
+        yag = yagmail.SMTP(gmail_username, gmail_password)
     if not filepath.endswith(os.sep):
         filepath += os.sep
     filenames = [filepath + f for f in os.listdir(filepath) if f.endswith(extension)]

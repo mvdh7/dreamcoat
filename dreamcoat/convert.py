@@ -1,4 +1,26 @@
-import numpy as np
+import os, shutil
+import numpy as np, xarray as xr
+
+
+def nc_to_zarr_zip(filename_nc, make_zip=True, delete_nc=False):
+    """Convert netcdf to zarr and a zip archive of the zarr.
+
+    Parameters
+    ----------
+    filename_nc : str
+        File path and name for the netcdf file.
+    make_zip : bool, optional
+        Whether to make the zip archive, by default True.
+    delete_nc : bool, optional
+        Whether to delete the original netcdf file, by default False.
+    """
+    nc = xr.open_dataset(filename_nc)
+    filename_zarr = ".zarr".join(filename_nc.rsplit(".nc", 1))
+    nc.to_zarr(filename_zarr)
+    if make_zip:
+        shutil.make_archive(filename_zarr, "zip", filename_zarr)
+    if delete_nc:
+        os.remove(filename_nc)
 
 
 def extent_to_nsew(map_extent):

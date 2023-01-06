@@ -42,7 +42,7 @@ def get_dat_data(filename):
     str
         The value stored in the .dat file or provided by the user.
     """
-    fn = os.sep.join((os.path.expanduser("~"), ".dreamcoat/{}.dat".format(filename)))
+    fn = os.sep.join((os.path.expanduser("~"), ".dreamcoat", "{}.dat".format(filename)))
     try:
         with open(fn, "r") as f:
             data = f.read().splitlines()[0]
