@@ -405,6 +405,7 @@ def open_surphys(
             "zos": "ssh",
         }
     )
+    # Add the vertical current speed, which has to be downloaded separately
     cmems["current_vertical"] = (
         xr.open_dataset(filepath + filename.replace(".zarr", "_wo.zarr"), engine="zarr")
         .wo.isel(depth=0)
