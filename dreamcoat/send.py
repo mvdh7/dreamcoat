@@ -5,7 +5,7 @@ from . import meta
 
 def all_files_from_dir(
     filepath=".",
-    extension=".png",
+    extension=".zip",
     gmail_username=None,
     gmail_password=None,
     separate=False,
@@ -20,7 +20,7 @@ def all_files_from_dir(
     filepath : str, optional
         File path to send files from, by default ".".
     extension : str, optional
-        File extension to send, by default ".png".
+        File extension to send, by default ".zip".
     gmail_username : str, optional
         Username of the sending gmail account, by default None, in which case this is
         taken from the .dreamcoat .dat files or the user is prompted for input.

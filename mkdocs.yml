@@ -6,7 +6,7 @@ nav:
   - Overview: index.md
   - CMEMS forecasts: cmems.md
   - MODIS satellites: modis.md
-  - Sending plots: send.md
+  - Sending data: send.md
   - Version history: versions.md
 
 theme:
