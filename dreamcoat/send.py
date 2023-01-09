@@ -59,3 +59,22 @@ def all_files_from_dir(
             yag.send(to=to, contents=contents, subject=subject, attachments=filenames)
     else:
         print("No files of given format found in given filepath!")
+
+
+def delete_from_dir(filepath=".", extension=".zip"):
+    """Delete all files with a given extension from a given directory.
+
+    Parameters
+    ----------
+    filepath : str, optional
+        File path to send files from, by default ".".
+    extension : str, optional
+        File extension to send, by default ".zip".
+    """
+    if not filepath.endswith(os.sep):
+        filepath += os.sep
+    filenames = [filepath + f for f in os.listdir(filepath) if f.endswith(extension)]
+    if len(filenames) > 0:
+        for f in filenames:
+            print(f)
+            os.remove(f)
