@@ -8,7 +8,6 @@ from cartopy.geodesic import Geodesic
 from . import convert, meta
 
 
-# TODO add a surface_next_days function
 # TODO add EEZ and MPA boundaries to maps
 
 
