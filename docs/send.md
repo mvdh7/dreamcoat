@@ -11,7 +11,7 @@ import dreamcoat as dc
 
 dc.send.all_files_from_dir(
     filepath=".",
-    extension=".zip",
+    extension="zip",
     gmail_username=None,
     separate=False,
     contents=None,
@@ -29,7 +29,7 @@ dc.send.all_files_from_dir(
 After sending the files, you can delete all the files with a given extension from a directory using `delete_from_dir`:
 
 ```python
-dc.send.delete_from_dir(filepath=".", extension=".zip")
+dc.send.delete_from_dir(filepath=".", extension="zip")
 ```
 
 Note that this will indiscriminately delete all files in the specified `filepath` with the specified `extension` - not just the ones you sent!
