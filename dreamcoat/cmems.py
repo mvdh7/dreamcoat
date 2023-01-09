@@ -162,6 +162,7 @@ def download_surphys(
     username=None,
     password=None,
     convert_nc=True,
+    delete_nc=True,
 ):
     """Download a missing CMEMS data file from the GLOBAL_ANALYSIS_FORECAST_PHY_001_024
     dataset including surface fields of salinity (so), potential temperature (thetao),
@@ -194,7 +195,9 @@ def download_surphys(
     password : str, optional
         Your CMEMS password, by default None, in which case you will be prompted for it.
     convert_nc : bool, optional
-        Whether to convert the nc file into a zarr/zip, by default True.
+        Whether to convert the nc files into zarr/zip, by default True.
+    delete_nc : bool, optional
+        Whether to delete the nc files after converting, by default True.
     """
     # Deal with None inputs
     if not username:
@@ -233,9 +236,30 @@ def download_surphys(
         + "--out-name {} ".format(filename)
         + "--user {} --pwd {}".format(username, password)
     )
+    # Now get vertical current velocity too
+    os.system(
+        "motuclient --motu https://nrt.cmems-du.eu/motu-web/Motu "
+        + "--service-id GLOBAL_ANALYSISFORECAST_PHY_001_024-TDS "
+        + "--product-id cmems_mod_glo_phy-wcur_anfc_0.083deg_P1D-m "
+        + "--longitude-min {} ".format(longitude_min)
+        + "--longitude-max {} ".format(longitude_max)
+        + "--latitude-min {} ".format(latitude_min)
+        + "--latitude-max {} ".format(latitude_max)
+        + '--date-min "{} 12:00:00" '.format(date_min)
+        + '--date-max "{} 12:00:00" '.format(date_max)
+        + "--depth-min 0.49402499198913574 "
+        + "--depth-max 0.49402499198913574 "
+        + "--variable wo "
+        + "--out-dir {} ".format(filepath)
+        + "--out-name {} ".format(filename.replace(".nc", "_wo.nc"))
+        + "--user {} --pwd {}".format(username, password)
+    )
     # Convert from nc to zarr and a zip archive
     if convert_nc:
-        convert.nc_to_zarr_zip(filepath + os.sep + filename, delete_nc=True)
+        convert.nc_to_zarr_zip(filepath + os.sep + filename, delete_nc=delete_nc)
+        convert.nc_to_zarr_zip(
+            filepath + os.sep + filename.replace(".nc", "_wo.nc"), delete_nc=delete_nc
+        )
 
 
 def download_surbio(
@@ -380,6 +404,11 @@ def open_surphys(
             "vo": "current_north",
             "zos": "ssh",
         }
+    )
+    cmems["current_vertical"] = (
+        xr.open_dataset(filepath + filename.replace(".zarr", "_wo.zarr"), engine="zarr")
+        .wo.isel(depth=0)
+        .interp_like(cmems, method="nearest")
     )
     return cmems
 
