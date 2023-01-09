@@ -4,12 +4,12 @@ See the [NASA Ocean Color website](https://oceancolor.gsfc.nasa.gov/) for more i
 
 ## Download dataset
 
-Dreamcoat downloads the daily datasets from MODIS Aqua and Terra and combines them into a single dataset for each day, taking the mean of the two instruments.  To get a day or some consecutive days of data, use `get_modis_days()`:
+Dreamcoat downloads the daily datasets from MODIS Aqua and Terra and combines them into a single dataset for each day, taking the mean of the two instruments.  To get a day or some consecutive days of data, use `get_days()`:
 
 ```python
 import dreamcoat as dc
 
-modis = dc.modis.get_modis_days(
+modis = dc.modis.get_days(
     date_min=None,
     date_max=None,
     latitude_min=-90,

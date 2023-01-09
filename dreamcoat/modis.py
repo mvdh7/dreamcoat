@@ -1,3 +1,4 @@
+import warnings
 from datetime import date, datetime, timedelta
 import xarray as xr, numpy as np
 
@@ -5,7 +6,7 @@ satellites = {"AQUA": "A", "TERRA": "T"}
 variables = {"pic": "PIC", "poc": "POC"}
 
 
-def _get_modis_url_daily(satellite, year, month, day, resolution="9km"):
+def _get_url_daily(satellite, year, month, day, resolution="9km"):
     return (
         "http://oceandata.sci.gsfc.nasa.gov/opendap/MODIS{}/L3SMI/".format(
             satellites[satellite.upper()]
@@ -20,7 +21,7 @@ def _get_modis_url_daily(satellite, year, month, day, resolution="9km"):
     )
 
 
-def _get_modis_url_8day(satellite, year, month, day, month_end, day_end):
+def _get_url_8day(satellite, year, month, day, month_end, day_end):
     return (
         "http://oceandata.sci.gsfc.nasa.gov/opendap/MODIS{}/L3SMI/".format(
             satellites[satellite.upper()]
@@ -43,7 +44,7 @@ def _get_modis_url_8day(satellite, year, month, day, month_end, day_end):
     )
 
 
-def get_modis_daily(
+def get_single_day(
     year,
     month,
     day,
@@ -81,10 +82,10 @@ def get_modis_daily(
         The combined PIC dataset with units mol/m**3.
     """
     modis_a = xr.open_dataset(
-        _get_modis_url_daily("aqua", year, month, day, resolution=resolution)
+        _get_url_daily("aqua", year, month, day, resolution=resolution)
     )
     modis_t = xr.open_dataset(
-        _get_modis_url_daily("terra", year, month, day, resolution=resolution)
+        _get_url_daily("terra", year, month, day, resolution=resolution)
     )
     ix_lat = modis_a.lat.data[
         (modis_a.lat.data >= latitude_min) & (modis_a.lat.data <= latitude_max)
@@ -95,48 +96,16 @@ def get_modis_daily(
     modis_a = modis_a.sel(lat=ix_lat, lon=ix_lon)
     modis_t = modis_t.sel(lat=ix_lat, lon=ix_lon)
     modis = modis_a.copy()
-    modis["pic"] = (
-        ("lat", "lon"),
-        np.nanmean(np.array([modis_a.pic.data, modis_t.pic.data]), axis=0),
-    )
-    return modis
-
-
-def get_modis_days_before(
-    year,
-    month,
-    day,
-    days_before=7,
-    latitude_min=-90,
-    latitude_max=90,
-    longitude_min=-180,
-    longitude_max=180,
-    resolution="9km",
-):
-    date_end = datetime(year, month, day)
-    date_start = date_end - timedelta(days=days_before)
-    modis = []
-    for d in range(days_before + 1):
-        date_now = date_start + timedelta(days=d)
-        print("Getting MODIS data for {}...".format(date_now.strftime("%Y-%m-%d")))
-        modis.append(
-            get_modis_daily(
-                date_now.year,
-                date_now.month,
-                date_now.day,
-                latitude_min=latitude_min,
-                latitude_max=latitude_max,
-                longitude_min=longitude_min,
-                longitude_max=longitude_max,
-                resolution=resolution,
-            )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Mean of empty slice")
+        modis["pic"] = (
+            ("lat", "lon"),
+            np.nanmean(np.array([modis_a.pic.data, modis_t.pic.data]), axis=0),
         )
-        modis[d] = modis[d].expand_dims(dim={"date": [np.datetime64(date_now)]})
-    modis = xr.concat(modis, "date")
     return modis
 
 
-def get_modis_days(
+def get_days(
     date_min=None,
     date_max=None,
     latitude_min=-90,
@@ -184,7 +153,7 @@ def get_modis_days(
         date_now = date_start + timedelta(days=d)
         print("Getting MODIS data for {}...".format(date_now.strftime("%Y-%m-%d")))
         modis.append(
-            get_modis_daily(
+            get_single_day(
                 date_now.year,
                 date_now.month,
                 date_now.day,
@@ -197,6 +166,7 @@ def get_modis_days(
         )
         modis[d] = modis[d].expand_dims(dim={"date": [np.datetime64(date_now)]})
     modis = xr.concat(modis, "date")
+    print("Got all MODIS data!")
     return modis
 
 
@@ -211,7 +181,7 @@ def _get_8day_end(date_start):
     return month_end, day_end
 
 
-def get_modis_8day(
+def get_8day(
     year,
     month,
     day,
@@ -273,8 +243,10 @@ def get_modis_8day(
     modis_a = modis_a.sel(lat=ix_lat, lon=ix_lon)
     modis_t = modis_t.sel(lat=ix_lat, lon=ix_lon)
     modis = modis_a.copy()
-    modis["pic"] = (
-        ("lat", "lon"),
-        np.nanmean(np.array([modis_a.pic.data, modis_t.pic.data]), axis=0),
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", message="Mean of empty slice")
+        modis["pic"] = (
+            ("lat", "lon"),
+            np.nanmean(np.array([modis_a.pic.data, modis_t.pic.data]), axis=0),
+        )
     return modis
