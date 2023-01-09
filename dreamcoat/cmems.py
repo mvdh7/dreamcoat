@@ -365,7 +365,8 @@ def open_surphys(
     Output dataset includes surface fields of practical salinity (salinity), potential
     temperature in °C (theta), mixed layer depth in m (mld), sea surface height in m
     (ssh), eastwards (current_east) and northwards (current_north) current velocities in
-    m/s, and total current speed in m/s (current_speed).
+    m/s, total horizontal current speed in m/s (current_speed), and vertical current
+    speed in m/s (current_vertical).
 
     Parameters
     ----------
