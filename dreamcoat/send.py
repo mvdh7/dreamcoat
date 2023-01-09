@@ -5,7 +5,7 @@ from . import meta
 
 def all_files_from_dir(
     filepath=".",
-    extension=".zip",
+    extension="zip",
     gmail_username=None,
     gmail_password=None,
     separate=False,
@@ -20,7 +20,7 @@ def all_files_from_dir(
     filepath : str, optional
         File path to send files from, by default ".".
     extension : str, optional
-        File extension to send, by default ".zip".
+        File extension to send, by default "zip".
     gmail_username : str, optional
         Username of the sending gmail account, by default None, in which case this is
         taken from the .dreamcoat .dat files or the user is prompted for input.
@@ -50,7 +50,9 @@ def all_files_from_dir(
         yag = yagmail.SMTP(gmail_username, gmail_password)
     if not filepath.endswith(os.sep):
         filepath += os.sep
-    filenames = [filepath + f for f in os.listdir(filepath) if f.endswith(extension)]
+    filenames = [
+        filepath + f for f in os.listdir(filepath) if f.endswith("." + extension)
+    ]
     if len(filenames) > 0:
         if separate:
             for f in filenames:
@@ -61,7 +63,7 @@ def all_files_from_dir(
         print("No files of given format found in given filepath!")
 
 
-def delete_from_dir(filepath=".", extension=".zip"):
+def delete_from_dir(filepath=".", extension="zip"):
     """Delete all files with a given extension from a given directory.
 
     Parameters
@@ -69,11 +71,13 @@ def delete_from_dir(filepath=".", extension=".zip"):
     filepath : str, optional
         File path to send files from, by default ".".
     extension : str, optional
-        File extension to send, by default ".zip".
+        File extension to send, by default "zip".
     """
     if not filepath.endswith(os.sep):
         filepath += os.sep
-    filenames = [filepath + f for f in os.listdir(filepath) if f.endswith(extension)]
+    filenames = [
+        filepath + f for f in os.listdir(filepath) if f.endswith("." + extension)
+    ]
     if len(filenames) > 0:
         for f in filenames:
             print(f)
