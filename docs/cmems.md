@@ -11,7 +11,9 @@ New files are only downloaded if they don't already exist locally and only the s
 
 ## Download a dataset
 
-  * `username` and `password` should be your login details for the CMEMS data portal.  **Don't commit these to a public repo!**  They can optionally be added to the .dreamcoat directory as `cmems_username.dat` and `cmems_password.dat`.
+  * `username` and `password` should be your login details for the CMEMS data portal.
+  * **Don't commit these to a public repo!**
+  * They can optionally be added to the .dreamcoat directory as `cmems_username.dat` and `cmems_password.dat`.
 
 ### Physical
 
