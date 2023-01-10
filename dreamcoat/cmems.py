@@ -163,6 +163,7 @@ def download_surphys(
     password=None,
     convert_nc=True,
     delete_nc=True,
+    get_current_vertical=True,
 ):
     """Download a missing CMEMS data file from the GLOBAL_ANALYSIS_FORECAST_PHY_001_024
     dataset including surface fields of salinity (so), potential temperature (thetao),
@@ -198,6 +199,8 @@ def download_surphys(
         Whether to convert the nc files into zarr/zip, by default True.
     delete_nc : bool, optional
         Whether to delete the nc files after converting, by default True.
+    get_current_vertical : bool, optional
+        Whether to also download the vertical current velocity, by default True.
     """
     # Deal with None inputs
     if username is None:
@@ -236,30 +239,33 @@ def download_surphys(
         + "--out-name {} ".format(filename)
         + "--user {} --pwd {}".format(username, password)
     )
-    # Now get vertical current velocity too
-    os.system(
-        "motuclient --motu https://nrt.cmems-du.eu/motu-web/Motu "
-        + "--service-id GLOBAL_ANALYSISFORECAST_PHY_001_024-TDS "
-        + "--product-id cmems_mod_glo_phy-wcur_anfc_0.083deg_P1D-m "
-        + "--longitude-min {} ".format(longitude_min)
-        + "--longitude-max {} ".format(longitude_max)
-        + "--latitude-min {} ".format(latitude_min)
-        + "--latitude-max {} ".format(latitude_max)
-        + '--date-min "{} 12:00:00" '.format(date_min)
-        + '--date-max "{} 12:00:00" '.format(date_max)
-        + "--depth-min 0.49402499198913574 "
-        + "--depth-max 0.49402499198913574 "
-        + "--variable wo "
-        + "--out-dir {} ".format(filepath)
-        + "--out-name {} ".format(filename.replace(".nc", "_wo.nc"))
-        + "--user {} --pwd {}".format(username, password)
-    )
+    # Now get vertical current velocity too, if requested
+    if get_current_vertical:
+        os.system(
+            "motuclient --motu https://nrt.cmems-du.eu/motu-web/Motu "
+            + "--service-id GLOBAL_ANALYSISFORECAST_PHY_001_024-TDS "
+            + "--product-id cmems_mod_glo_phy-wcur_anfc_0.083deg_P1D-m "
+            + "--longitude-min {} ".format(longitude_min)
+            + "--longitude-max {} ".format(longitude_max)
+            + "--latitude-min {} ".format(latitude_min)
+            + "--latitude-max {} ".format(latitude_max)
+            + '--date-min "{} 12:00:00" '.format(date_min)
+            + '--date-max "{} 12:00:00" '.format(date_max)
+            + "--depth-min 0.49402499198913574 "
+            + "--depth-max 0.49402499198913574 "
+            + "--variable wo "
+            + "--out-dir {} ".format(filepath)
+            + "--out-name {} ".format(filename.replace(".nc", "_wo.nc"))
+            + "--user {} --pwd {}".format(username, password)
+        )
     # Convert from nc to zarr and a zip archive
     if convert_nc:
         convert.nc_to_zarr_zip(filepath + os.sep + filename, delete_nc=delete_nc)
-        convert.nc_to_zarr_zip(
-            filepath + os.sep + filename.replace(".nc", "_wo.nc"), delete_nc=delete_nc
-        )
+        if get_current_vertical:
+            convert.nc_to_zarr_zip(
+                filepath + os.sep + filename.replace(".nc", "_wo.nc"),
+                delete_nc=delete_nc,
+            )
 
 
 def download_surbio(
@@ -274,6 +280,7 @@ def download_surbio(
     username=None,
     password=None,
     convert_nc=True,
+    delete_nc=True,
 ):
     """Download a missing CMEMS data file from the GLOBAL_ANALYSIS_FORECAST_BIO_001_028
     # dataset including surface fields of salinity (so), potential temperature (thetao),
@@ -349,7 +356,7 @@ def download_surbio(
     )
     # Convert from nc to zarr and a zip archive
     if convert_nc:
-        convert.nc_to_zarr_zip(filepath + os.sep + filename, delete_nc=True)
+        convert.nc_to_zarr_zip(filepath + os.sep + filename, delete_nc=delete_nc)
 
 
 def open_surphys(
@@ -360,6 +367,7 @@ def open_surphys(
     latitude_max=90,
     longitude_min=-180,
     longitude_max=180,
+    with_current_vertical=True,
 ):
     """Open a CMEMS data file from the GLOBAL_ANALYSIS_FORECAST_PHY_001_024 dataset.
     Output dataset includes surface fields of practical salinity (salinity), potential
@@ -386,6 +394,8 @@ def open_surphys(
         Minimum longitude in decimal degrees E, by default -180.
     longitude_max : int, optional
         Maximum longitude in decimal degrees E, by default 180.
+    with_current_vertical : bool, optional
+        Whether to import vertical current speed, by default True.
 
     Returns
     -------
@@ -406,12 +416,15 @@ def open_surphys(
             "zos": "ssh",
         }
     )
-    # Add the vertical current speed, which has to be downloaded separately
-    cmems["current_vertical"] = (
-        xr.open_dataset(filepath + filename.replace(".zarr", "_wo.zarr"), engine="zarr")
-        .wo.isel(depth=0)
-        .interp_like(cmems, method="nearest")
-    )
+    # Add the vertical current speed if requested, which has to be downloaded separately
+    if with_current_vertical:
+        cmems["current_vertical"] = (
+            xr.open_dataset(
+                filepath + filename.replace(".zarr", "_wo.zarr"), engine="zarr"
+            )
+            .wo.isel(depth=0)
+            .interp_like(cmems, method="nearest")
+        )
     return cmems
 
 
@@ -463,6 +476,7 @@ def open_surface(
     latitude_max=90,
     longitude_min=-180,
     longitude_max=180,
+    with_current_vertical=False,
 ):
     """Open CMEMS data files from the GLOBAL_ANALYSIS_FORECAST_PHY_001_024 and
     GLOBAL_ANALYSIS_FORECAST_BIO_001_028 datasets.  Combine both datasets together,
@@ -488,6 +502,8 @@ def open_surface(
         Minimum longitude in decimal degrees E, by default -180.
     longitude_max : int, optional
         Maximum longitude in decimal degrees E, by default 180.
+    with_current_vertical : bool, optional
+        Whether to import vertical current speed, by default False.
 
     Returns
     -------
@@ -503,6 +519,7 @@ def open_surface(
         latitude_max=latitude_max,
         longitude_min=longitude_min,
         longitude_max=longitude_max,
+        with_current_vertical=with_current_vertical,
     )
     surface_bio = open_surbio(
         filepath=filepath,

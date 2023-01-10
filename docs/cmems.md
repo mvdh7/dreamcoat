@@ -9,11 +9,60 @@ These two datasets are collected for the same space and time ranges and merged i
 
 New files are only downloaded if they don't already exist locally and only the specified space and time ranges are downloaded.
 
-## Download or open dataset
+## Download a dataset
+
+  * `username` and `password` should be your login details for the CMEMS data portal.  **Don't commit these to a public repo!**  They can optionally be added to the .dreamcoat directory as `cmems_username.dat` and `cmems_password.dat`.
+
+### Physical
+
+Physical data from `GLOBAL_ANALYSIS_FORECAST_PHY_001_024`:
 
 ```python
 import dreamcoat as dc
 
+dc.cmems.download_surphys(
+    filename=None,
+    filepath="",
+    date_min=None,
+    date_max=None,
+    latitude_min=-90,
+    latitude_max=90,
+    longitude_min=-180,
+    longitude_max=180,
+    username=None,
+    password=None,
+    convert_nc=True,
+    delete_nc=True,
+    get_current_vertical=True,
+)
+```
+
+### Biogeochemical
+
+Biogeochemical data from `GLOBAL_ANALYSIS_FORECAST_BIO_001_028`:
+
+```python
+dc.cmems.download_surbio(
+    filename=None,
+    filepath="",
+    date_min=None,
+    date_max=None,
+    latitude_min=-90,
+    latitude_max=90,
+    longitude_min=-180,
+    longitude_max=180,
+    username=None,
+    password=None,
+    convert_nc=True,
+    delete_nc=True,
+)
+```
+
+## Open a dataset
+
+Once both datasets above have been downloaded, to open the files use
+
+```python
 surface = dc.cmems.open_surface(
     filepath="",
     date_min=None,
@@ -24,12 +73,12 @@ surface = dc.cmems.open_surface(
     longitude_max=180,
     username=None,
     password=None,
+    with_current_vertical=False,
 )
 ```
 
-  * The `filepath` specifies where downloaded files should be saved.
+  * The `filepath` specifies where downloaded files can be found.
   * Dates should be given in `%Y-%m-%d` format.  If left blank, today is used for both.
-  * Username and password should be your login details for the CMEMS data portal.  **Don't commit these to a public repo!**
 
 ## Plotting functions
 
@@ -40,7 +89,7 @@ surface = dc.cmems.open_surface(
 `surface_map` draws a map of a single time point from the CMEMS dataset.  You need to extract the single time slice yourself before running the plotting function, as shown below.
 
 ```python
-surface_time_slice = surface.isel(0)  # for example
+surface_time_slice = surface.isel(time=0)  # for example
 surface_time_slice = surface.mean('time')  # alternative example
 
 fig, ax = dc.plot.surface_map(
