@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 import calkulate as calk
 import koolstof as ks
-from . import convert
+from . import convert, meta
 
 
 def _get_filename_ending(
@@ -86,9 +86,9 @@ def _get_surphys_filename(
     str
         The filename for the specified date and location ranges.
     """
-    if not date_min:
+    if date_min is None:
         date_min = date.today().strftime("%Y-%m-%d")
-    if not date_max:
+    if date_max is None:
         date_max = date.today().strftime("%Y-%m-%d")
     return "global-analysis-forecast-phy-001-024_" + _get_filename_ending(
         date_min,
@@ -135,9 +135,9 @@ def _get_surbio_filename(
     str
         The filename for the specified date and location ranges.
     """
-    if not date_min:
+    if date_min is None:
         date_min = date.today().strftime("%Y-%m-%d")
-    if not date_max:
+    if date_max is None:
         date_max = date.today().strftime("%Y-%m-%d")
     return "global-analysis-forecast-bio-001-028_" + _get_filename_ending(
         date_min,
@@ -200,15 +200,15 @@ def download_surphys(
         Whether to delete the nc files after converting, by default True.
     """
     # Deal with None inputs
-    if not username:
-        username = input("Please enter your CMEMS username: ")
-    if not password:
-        password = input("Please enter your CMEMS password: ")
-    if not date_min:
+    if username is None:
+        username = meta.get_dat_data("cmems_username")
+    if password is None:
+        password = meta.get_dat_data("cmems_password")
+    if date_min is None:
         date_min = date.today().strftime("%Y-%m-%d")
-    if not date_max:
+    if date_max is None:
         date_max = date.today().strftime("%Y-%m-%d")
-    if not filename:
+    if filename is None:
         filename = _get_surphys_filename(
             date_min,
             date_max,
@@ -309,15 +309,15 @@ def download_surbio(
         Whether to convert the nc file into a zarr/zip, by default True.
     """
     # Deal with None inputs
-    if not username:
-        username = input("Please enter your CMEMS username: ")
-    if not password:
-        password = input("Please enter your CMEMS password: ")
-    if not date_min:
+    if username is None:
+        username = meta.get_dat_data("cmems_username")
+    if password is None:
+        password = meta.get_dat_data("cmems_password")
+    if date_min is None:
         date_min = date.today().strftime("%Y-%m-%d")
-    if not date_max:
+    if date_max is None:
         date_max = date.today().strftime("%Y-%m-%d")
-    if not filename:
+    if filename is None:
         filename = _get_surbio_filename(
             date_min,
             date_max,
