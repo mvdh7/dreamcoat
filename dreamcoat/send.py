@@ -10,7 +10,7 @@ def all_files_from_dir(
     gmail_password=None,
     separate=False,
     contents=None,
-    subject="[dreamcoat] all_files_from_dir",
+    subject=None,
     to=None,
 ):
     """Send all files in the filepath with the given extension to the given email.
@@ -33,7 +33,7 @@ def all_files_from_dir(
     contents : str, optional
         Any text to go in the main body of the email, by default None.
     subject : str, optional
-        The subject of the email, by default "[dreamcoat] all_files_from_dir".
+        The subject of the email, by default "[dreamcoat] {filepath}*.{extension}".
     to : str, optional
         The email address to send to, by default Nonein which case this is taken from
         the .dreamcoat .dat files or the user is prompted for input.
@@ -53,6 +53,8 @@ def all_files_from_dir(
     filenames = [
         filepath + f for f in os.listdir(filepath) if f.endswith("." + extension)
     ]
+    if subject is None:
+        subject = "[dreamcoat] {}*.{}".format(filepath, extension)
     if len(filenames) > 0:
         if separate:
             for f in filenames:
