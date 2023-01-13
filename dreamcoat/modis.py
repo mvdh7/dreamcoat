@@ -67,7 +67,7 @@ def _get_url_daily(satellite, year, month, day, appkey=None, resolution="9km"):
 
 
 def download_single_day(
-    satellite, year, month, day, appkey=None, filepath="", resolution="9km"
+    satellite, year, month, day, appkey=None, filepath=".", resolution="9km"
 ):
     url = _get_url_daily(
         satellite, year, month, day, appkey=appkey, resolution=resolution
@@ -87,7 +87,7 @@ def get_single_day(
     day,
     appkey=None,
     delete_nc=False,
-    filepath="",
+    filepath=".",
     latitude_min=-90,
     latitude_max=90,
     longitude_min=-180,
@@ -197,7 +197,7 @@ def get_days(
     longitude_max=180,
     appkey=None,
     delete_nc=False,
-    filepath="",
+    filepath=".",
     resolution="9km",
 ):
     """Download a series of days of MODIS PIC data, combining both the Aqua and Terra
