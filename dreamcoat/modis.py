@@ -267,7 +267,7 @@ def get_days(
     return modis
 
 
-def open_modis_daily(
+def open_days(
     filepath=".",
     date_start="1900-01-01",
     date_end="2300-01-01",
