@@ -8,6 +8,8 @@ You need to create a [NASA Earthdata account](https://urs.earthdata.nasa.gov/hom
 
 Create a .netrc file and generate an AppKey as described [here](https://oceancolor.gsfc.nasa.gov/data/download_methods/) (check the *Download Methods* tab on that page).  Put the appkey in `~/.dreamcoat/nasa_appkey.dat`.
 
+The download functions use `wget`, so they won't work natively on Windows.
+
 ## Download dataset
 
 Dreamcoat downloads the daily L3-mapped observations from MODIS Aqua and Terra and combines them into a single dataset for each day, taking the mean of the two instruments.  To get a day or some consecutive days of data, use `get_days()`:
