@@ -10,7 +10,7 @@ Create a .netrc file and generate an AppKey as described [here](https://oceancol
 
 ## Download dataset
 
-Dreamcoat downloads the daily L3 observations from MODIS Aqua and Terra and combines them into a single dataset for each day, taking the mean of the two instruments.  To get a day or some consecutive days of data, use `get_days()`:
+Dreamcoat downloads the daily L3-mapped observations from MODIS Aqua and Terra and combines them into a single dataset for each day, taking the mean of the two instruments.  To get a day or some consecutive days of data, use `get_days()`:
 
 ```python
 import dreamcoat as dc
@@ -34,3 +34,15 @@ modis = dc.modis.get_days(
   * Files are downloaded as netCDFs into the `filepath`.
 
 Only particulate inorganic carbon (PIC) data are downloaded.  These data are in mol/m<sup>3</sup>.
+
+## Open daily datasets
+
+To open a sequence of already-downloaded daily datasets and combine them into a single xarray Dataset, use `open_days()`:
+
+```python
+modis = dc.modis.open_days(
+    date_min="1900-01-01",
+    date_max="2300-01-01",
+    filepath=".",
+)
+```
