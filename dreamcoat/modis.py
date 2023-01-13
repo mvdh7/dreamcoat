@@ -74,7 +74,7 @@ def download_single_day(
     )
     command = (
         "wget --load-cookies ~/.urs_cookies --save-cookies ~/.urs_cookies"
-        + "--auth-no-challenge=on --content disposition {}".format(url)
+        + "--auth-no-challenge=on --content-disposition {}".format(url)
     )
     if filepath is not None:
         command += " -P {}".format(filepath)
