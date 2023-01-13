@@ -2,9 +2,15 @@
 
 See the [NASA Ocean Color website](https://oceancolor.gsfc.nasa.gov/) for more information on the MODIS [Aqua](https://oceancolor.gsfc.nasa.gov/data/aqua/) and [Terra](https://oceancolor.gsfc.nasa.gov/data/terra/) instruments.  So far, only a small subset of the available data products can be accessed using dreamcoat, but this will be improved in future versions.  
 
+## Set up credentials
+
+You need to create a [NASA Earthdata account](https://urs.earthdata.nasa.gov/home) in order to download MODIS data.
+
+Create a .netrc file and generate an AppKey as described [here](https://oceancolor.gsfc.nasa.gov/data/download_methods/) (check the *Download Methods* tab on that page).  Put the appkey in `~/.dreamcoat/nasa_appkey.dat`.
+
 ## Download dataset
 
-Dreamcoat downloads the daily datasets from MODIS Aqua and Terra and combines them into a single dataset for each day, taking the mean of the two instruments.  To get a day or some consecutive days of data, use `get_days()`:
+Dreamcoat downloads the daily L3 observations from MODIS Aqua and Terra and combines them into a single dataset for each day, taking the mean of the two instruments.  To get a day or some consecutive days of data, use `get_days()`:
 
 ```python
 import dreamcoat as dc

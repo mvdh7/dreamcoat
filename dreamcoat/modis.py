@@ -1,12 +1,13 @@
-import warnings
+import warnings, os
 from datetime import date, datetime, timedelta
 import xarray as xr, numpy as np
+from . import meta
 
 satellites = {"AQUA": "A", "TERRA": "T"}
 variables = {"pic": "PIC", "poc": "POC"}
 
 
-def _get_url_daily(satellite, year, month, day, resolution="9km"):
+def _get_url_daily_opendap(satellite, year, month, day, resolution="9km"):
     return (
         "http://oceandata.sci.gsfc.nasa.gov/opendap/MODIS{}/L3SMI/".format(
             satellites[satellite.upper()]
@@ -21,7 +22,7 @@ def _get_url_daily(satellite, year, month, day, resolution="9km"):
     )
 
 
-def _get_url_8day(satellite, year, month, day, month_end, day_end):
+def _get_url_8day_opendap(satellite, year, month, day, month_end, day_end):
     return (
         "http://oceandata.sci.gsfc.nasa.gov/opendap/MODIS{}/L3SMI/".format(
             satellites[satellite.upper()]
@@ -44,10 +45,49 @@ def _get_url_8day(satellite, year, month, day, month_end, day_end):
     )
 
 
+def _get_filename_daily(satellite, year, month, day, resolution="9km"):
+    return (
+        "{}_MODIS.".format(satellite.upper())
+        + "{:4.0f}{:02.0f}{:02.0f}.L3m.DAY.".format(year, month, day)
+        + "{var_big}.{var_small}.{resolution}.NRT".format(
+            var_big="PIC", var_small="pic", resolution=resolution
+        )
+    )
+
+
+def _get_url_daily(satellite, year, month, day, appkey=None, resolution="9km"):
+    assert resolution in ["4km", "9km"], "Resolution must be either '4km' or '9km'."
+    if appkey is None:
+        appkey = meta.get_dat_data("nasa_appkey")
+    return (
+        "https://oceandata.sci.gsfc.nasa.gov/ob/getfile/"
+        + _get_filename_daily(satellite, year, month, day, resolution=resolution)
+        + ".nc?appkey={}".format(appkey)
+    )
+
+
+def download_single_day(
+    satellite, year, month, day, appkey=None, filepath=None, resolution="9km"
+):
+    url = _get_url_daily(
+        satellite, year, month, day, appkey=appkey, resolution=resolution
+    )
+    command = (
+        "wget --load-cookies ~/.urs_cookies --save-cookies ~/.urs_cookies"
+        + "--auth-no-challenge=on --content disposition {}".format(url)
+    )
+    if filepath is not None:
+        command += " -P {}".format(filepath)
+    os.system(command)
+
+
 def get_single_day(
     year,
     month,
     day,
+    appkey=None,
+    delete_nc=False,
+    filepath=None,
     latitude_min=-90,
     latitude_max=90,
     longitude_min=-180,
@@ -65,6 +105,14 @@ def get_single_day(
         The month to download data for.
     day : int
         The day to download data for.
+    appkey : str, optional
+        The AppKey for your NASA Earthdata account, by default None, in which case it
+        is taken from `.dreamcoat/nasa_appkey.dat`.
+    delete_nc : bool, optional
+        Whether to delete the nc files after converting, by default False.
+    filepath : str, optional
+        The file path where the data are to be saved, without a trailing separator,
+        by default None.
     latitude_min : float, optional
         Minimum latitude to subset data, by default -90.
     latitude_max : float, optional
@@ -81,12 +129,43 @@ def get_single_day(
     xarray.Dataset
         The combined PIC dataset with units mol/m**3.
     """
-    modis_a = xr.open_dataset(
-        _get_url_daily("aqua", year, month, day, resolution=resolution)
+    # Download the netcdf datasets from both satellites
+    download_single_day(
+        "aqua",
+        year,
+        month,
+        day,
+        appkey=appkey,
+        filepath=filepath,
+        resolution=resolution,
     )
-    modis_t = xr.open_dataset(
-        _get_url_daily("terra", year, month, day, resolution=resolution)
+    download_single_day(
+        "terra",
+        year,
+        month,
+        day,
+        appkey=appkey,
+        filepath=filepath,
+        resolution=resolution,
     )
+    # Import the dataset from each satellite separately
+    filename_aqua = os.sep.join(
+        (
+            filepath,
+            _get_filename_daily("aqua", year, month, day, resolution=resolution)
+            + ".nc",
+        )
+    )
+    filename_terra = os.sep.join(
+        (
+            filepath,
+            _get_filename_daily("terra", year, month, day, resolution=resolution)
+            + ".nc",
+        )
+    )
+    modis_a = xr.open_dataset(filename_aqua)
+    modis_t = xr.open_dataset(filename_terra)
+    # Cut to the requested latitude and longitude ranges
     ix_lat = modis_a.lat.data[
         (modis_a.lat.data >= latitude_min) & (modis_a.lat.data <= latitude_max)
     ]
@@ -95,6 +174,7 @@ def get_single_day(
     ]
     modis_a = modis_a.sel(lat=ix_lat, lon=ix_lon)
     modis_t = modis_t.sel(lat=ix_lat, lon=ix_lon)
+    # Take the mean of the two satellites' data to get the final combined dataset
     modis = modis_a.copy()
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", message="Mean of empty slice")
@@ -102,6 +182,9 @@ def get_single_day(
             ("lat", "lon"),
             np.nanmean(np.array([modis_a.pic.data, modis_t.pic.data]), axis=0),
         )
+    if delete_nc:
+        os.remove(filename_aqua)
+        os.remove(filename_terra)
     return modis
 
 
@@ -112,6 +195,9 @@ def get_days(
     latitude_max=90,
     longitude_min=-180,
     longitude_max=180,
+    appkey=None,
+    delete_nc=False,
+    filepath=None,
     resolution="9km",
 ):
     """Download a series of days of MODIS PIC data, combining both the Aqua and Terra
@@ -133,6 +219,14 @@ def get_days(
         Minimum longitude to subset data, by default -180.
     longitude_max : float, optional
         Maximum longitude to subset data, by default 180.
+    appkey : str, optional
+        The AppKey for your NASA Earthdata account, by default None, in which case it
+        is taken from `.dreamcoat/nasa_appkey.dat`.
+    delete_nc : bool, optional
+        Whether to delete the nc files after converting, by default False.
+    filepath : str, optional
+        The file path where the data are to be saved, without a trailing separator,
+        by default None.
     resolution : str, optional
         Resolution to download, can be "4km" or "9km", by default "9km".
 
@@ -157,6 +251,9 @@ def get_days(
                 date_now.year,
                 date_now.month,
                 date_now.day,
+                appkey=appkey,
+                delete_nc=delete_nc,
+                filepath=filepath,
                 latitude_min=latitude_min,
                 latitude_max=latitude_max,
                 longitude_min=longitude_min,
