@@ -22,11 +22,15 @@ modis = dc.modis.get_days(
     latitude_max=90,
     longitude_min=-180,
     longitude_max=180,
+    appkey=None,
+    delete_nc=False,
+    filepath=".",
     resolution="9km",
 )
 ```
 
   * Dates should be given in `%Y-%m-%d` format.  If left blank, yesterday is used for both.
   * Resolution can be `"4km"` or `"9km"`.
+  * Files are downloaded as netCDFs into the `filepath`.
 
 Only particulate inorganic carbon (PIC) data are downloaded.  These data are in mol/m<sup>3</sup>.

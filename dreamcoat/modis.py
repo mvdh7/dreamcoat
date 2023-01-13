@@ -267,6 +267,52 @@ def get_days(
     return modis
 
 
+def open_modis_daily(
+    filepath=".",
+    date_start="1900-01-01",
+    date_end="2300-01-01",
+):
+    """Open a set of downloaded MODIS zarr files in a single dataframe.
+
+    Parameters
+    ----------
+    filepath : str, optional
+        The file path where the MODIS zarr files can be found, by default ".".
+    date_start : str, optional
+        The earliest date to include data from in '%Y-%m-%d' format, by default
+        "1900-01-01".
+    date_end : str, optional
+        The latest date to include data from in '%Y-%m-%d' format, by default
+        "2300-01-01".
+    """
+    # Add separator to filepath if needed
+    if not filepath.endswith(os.sep):
+        filepath += os.sep
+    # Get a list of all available MODIS files
+    modis_files = [
+        f
+        for f in os.listdir(filepath)
+        if f.startswith("modis_pic_") and f.endswith(".zarr")
+    ]
+    modis_files.sort()
+    # Get the date associated with each file
+    modis_dates = {
+        f: np.datetime64(f.split("_")[-1].split(".")[0]) for f in modis_files
+    }
+    # Cut the list of files based on date_start and date_end
+    modis_files = [
+        f
+        for f in modis_files
+        if (modis_dates[f] >= np.datetime64(date_start))
+        and (modis_dates[f] <= np.datetime64(date_end))
+    ]
+    # Import and concatenate all the files
+    modis = xr.concat(
+        [xr.open_dataset(filepath + f, engine="zarr") for f in modis_files], "date"
+    )
+    return modis
+
+
 def _get_8day_end(date_start):
     date_plus7 = date_start + timedelta(days=7)
     if date_plus7.year == date_start.year:
