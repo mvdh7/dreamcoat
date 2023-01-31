@@ -18,6 +18,7 @@ def add_ship(
     distance=None,
     color="xkcd:strawberry",
     fade_concentric=True,
+    show_centre=True,
 ):
     """Add ship location and an optional circle at a certain distance around it.
 
@@ -37,16 +38,19 @@ def add_ship(
     fade_concentric : bool, optional
         Whether to gradually fade out concentric circles if multiple distances are
         provided, by default True.
+    show_centre : bool, optional
+        Whether to show the central ship location, by default True.
     """
-    ax.scatter(
-        longitude,
-        latitude,
-        c=color,
-        marker="+",
-        lw=1,
-        s=10,
-        transform=ccrs.PlateCarree(),
-    )
+    if show_centre:
+        ax.scatter(
+            longitude,
+            latitude,
+            c=color,
+            marker="+",
+            lw=1,
+            s=10,
+            transform=ccrs.PlateCarree(),
+        )
     if distance is not None:
         if np.isscalar(distance):
             distance = [distance]
@@ -291,6 +295,7 @@ def surface_map(
     ship_distance=None,
     ship_fade_concentric=True,
     ship_lon_lat=None,
+    ship_show_centre=True,
     title="",
     vmin=None,
     vmax=None,
@@ -347,6 +352,8 @@ def surface_map(
         Whether to fade out the concentric circle lines, by default True.
     ship_lon_lat : float, optional
         Longitude and latitude of the ship in decimal degrees N or E, by default None.
+    ship_show_centre : bool, optional
+        Whether to show the central ship location, by default True.
     title : str, optional
         Text for the figure title, by default "".
     vmin : float, optional
@@ -504,6 +511,7 @@ def surface_map(
             distance=ship_distance,
             color=fs["ship_color"],
             fade_concentric=ship_fade_concentric,
+            show_centre=ship_show_centre,
         )
     add_credit(ax)
     ax.set_extent(map_extent, crs=ccrs.PlateCarree())  # in case it's changed
