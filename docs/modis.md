@@ -48,3 +48,9 @@ modis = dc.modis.open_days(
     filepath=".",
 )
 ```
+
+Note that this converts the PIC data into units of mmol/m<sup>3</sup>.
+
+## Plotting
+
+MODIS PIC data opened with `dc.modis.open_days()` can be mapped with [`dc.plot.surface_map()`](../cmems/#at-a-single-time-point).

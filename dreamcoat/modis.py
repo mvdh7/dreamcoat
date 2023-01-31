@@ -272,4 +272,8 @@ def open_days(
     modis = xr.concat(
         [xr.open_dataset(filepath + f, engine="zarr") for f in modis_files], "date"
     )
+    # Rename coordinates & dimensions for consistency with CMEMS
+    modis = modis.rename({"lat": "latitude", "lon": "longitude", "date": "time"})
+    # Convert units to mmol / m**3
+    modis["pic"] *= 1e3
     return modis

@@ -204,6 +204,11 @@ var_settings = {
         label="AOU / µmol kg$^{-1}$",
         ship_color="xkcd:green",
     ),
+    "pic": dict(
+        cmap="viridis",
+        label="PIC / mmol m$^{-3}$",
+        ship_color="xkcd:strawberry",
+    ),
 }
 
 
@@ -235,7 +240,18 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
                 }
             )
     # Variables with lowest values close to, but not lower than, zero
-    for v in ["mld", "no3", "po4", "si", "fe", "chl", "nppv", "phyc", "current_speed"]:
+    for v in [
+        "mld",
+        "no3",
+        "po4",
+        "si",
+        "fe",
+        "chl",
+        "nppv",
+        "phyc",
+        "current_speed",
+        "pic",
+    ]:
         if v in data_extent:
             fvar_settings.update(
                 {
@@ -270,6 +286,50 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
                 }
             )
     return fvar_settings
+
+
+def add_lon_lat_labels(
+    ax, longitude_fmt=":03.0f", latitude_fmt=":02.0f", map_extent=None
+):
+    if map_extent is not None:
+        ax.set_extent(map_extent, crs=ccrs.PlateCarree())
+    map_extent = ax.get_extent(crs=ccrs.PlateCarree())
+    nsew = convert.extent_to_nsew(map_extent)
+    ax.text(
+        -0.003,
+        0,
+        ("{" + latitude_fmt + "}°{}").format(np.abs(map_extent[2]), nsew[2]),
+        rotation=90,
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+    )
+    ax.text(
+        -0.003,
+        1,
+        ("{" + latitude_fmt + "}°{}").format(np.abs(map_extent[3]), nsew[3]),
+        rotation=90,
+        transform=ax.transAxes,
+        ha="right",
+        va="top",
+    )
+    ax.text(
+        0,
+        1.003,
+        ("{" + longitude_fmt + "}°{}").format(np.abs(map_extent[0]), nsew[0]),
+        transform=ax.transAxes,
+        ha="left",
+        va="bottom",
+    )
+    ax.text(
+        1,
+        1.003,
+        ("{" + longitude_fmt + "}°{}").format(np.abs(map_extent[1]), nsew[1]),
+        transform=ax.transAxes,
+        ha="right",
+        va="bottom",
+    )
+    return map_extent
 
 
 def surface_map(
@@ -410,9 +470,8 @@ def surface_map(
         extend_sum += 1
     if extend_sum == 2:
         extend = "both"
-
     # Draw the colorbar
-    plt.colorbar(
+    cb = fig.colorbar(
         dplot,
         aspect=25,
         extend=extend,
@@ -463,43 +522,11 @@ def surface_map(
         )
 
     # Add latitude / longitude extents and labels
-    if map_extent is not None:
-        ax.set_extent(map_extent, crs=ccrs.PlateCarree())
-    map_extent = ax.get_extent(crs=ccrs.PlateCarree())
-    nsew = convert.extent_to_nsew(map_extent)
-    ax.text(
-        -0.003,
-        0,
-        ("{" + longitude_fmt + "}°{}").format(np.abs(map_extent[2]), nsew[2]),
-        rotation=90,
-        transform=ax.transAxes,
-        ha="right",
-        va="bottom",
-    )
-    ax.text(
-        -0.003,
-        1,
-        ("{" + longitude_fmt + "}°{}").format(np.abs(map_extent[3]), nsew[3]),
-        rotation=90,
-        transform=ax.transAxes,
-        ha="right",
-        va="top",
-    )
-    ax.text(
-        0,
-        1.003,
-        ("{" + latitude_fmt + "}°{}").format(np.abs(map_extent[0]), nsew[0]),
-        transform=ax.transAxes,
-        ha="left",
-        va="bottom",
-    )
-    ax.text(
-        1,
-        1.003,
-        ("{" + latitude_fmt + "}°{}").format(np.abs(map_extent[1]), nsew[1]),
-        transform=ax.transAxes,
-        ha="right",
-        va="bottom",
+    map_extent = add_lon_lat_labels(
+        ax,
+        longitude_fmt=longitude_fmt,
+        latitude_fmt=latitude_fmt,
+        map_extent=map_extent,
     )
 
     # Misc. additions and settings
@@ -515,11 +542,11 @@ def surface_map(
         )
     add_credit(ax)
     ax.set_extent(map_extent, crs=ccrs.PlateCarree())  # in case it's changed
-    plt.tight_layout()
+    fig.tight_layout()
 
     # Save to file, if requested, and finish
     if save_figure:
-        plt.savefig(save_path + "surface_{}{}.png".format(fvar, save_extra))
+        fig.savefig(save_path + "surface_{}{}.png".format(fvar, save_extra))
     return fig, ax
 
 
@@ -801,7 +828,7 @@ def surface_timeseries_grid_phys(data, dpi=150, figsize=[9.6, 7.2]):
             ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
         else:
             ax.set_visible(False)
-    plt.tight_layout()
+    fig.tight_layout()
     return fig, axs
 
 
@@ -834,7 +861,7 @@ def surface_timeseries_grid_co2(data, dpi=150, figsize=[9.6, 4.8]):
             ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
         else:
             ax.set_visible(False)
-    plt.tight_layout()
+    fig.tight_layout()
     return fig, axs
 
 
@@ -867,7 +894,7 @@ def surface_timeseries_grid_bio(data, dpi=150, figsize=[9.6, 4.8]):
             ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
         else:
             ax.set_visible(False)
-    plt.tight_layout()
+    fig.tight_layout()
     return fig, axs
 
 
@@ -899,7 +926,7 @@ def surface_timeseries_grid_nuts(data, dpi=150, figsize=[9.6, 4.8]):
             ax.text(0, 1.05, "(" + letter + ")", transform=ax.transAxes)
         else:
             ax.set_visible(False)
-    plt.tight_layout()
+    fig.tight_layout()
     return fig, axs
 
 
@@ -991,5 +1018,5 @@ def surface_currents(data, dpi=150, figsize=[6.4, 4.8]):
     # Finish off
     add_credit(ax)
     ax.set_ylim([0, np.max(frho * 1.1)])
-    plt.tight_layout()
+    fig.tight_layout()
     return fig, ax
