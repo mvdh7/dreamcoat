@@ -274,6 +274,7 @@ def open_days(
     )
     # Rename coordinates & dimensions for consistency with CMEMS
     modis = modis.rename({"lat": "latitude", "lon": "longitude", "date": "time"})
+    modis = modis.sortby("latitude")
     # Convert units to mmol / m**3
     modis["pic"] *= 1e3
     return modis
