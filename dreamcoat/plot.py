@@ -80,7 +80,7 @@ def add_credit(ax):
     ax.text(
         1.005,
         0,
-        "dreamcoat-{} (v{})".format(meta.version_colour, meta.version_number),
+        "dreamcoat {} (v{})".format(meta.version_colour, meta.version_number),
         c="xkcd:{}".format(meta.version_colour),
         ha="left",
         va="bottom",
