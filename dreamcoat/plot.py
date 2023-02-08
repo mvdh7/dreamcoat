@@ -80,7 +80,8 @@ def add_credit(ax):
     ax.text(
         1.005,
         0,
-        "dreamcoat {} (v{})".format(meta.version_colour, meta.version_number),
+        "dreamcoat {}".format(meta.version_colour),
+        # "dreamcoat {} (v{})".format(meta.version_colour, meta.version_number),
         c="xkcd:{}".format(meta.version_colour),
         ha="left",
         va="bottom",
@@ -289,7 +290,7 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
 
 
 def add_lon_lat_labels(
-    ax, longitude_fmt=":03.0f", latitude_fmt=":02.0f", map_extent=None
+    ax, longitude_fmt=":03.0f", latitude_fmt=":02.0f", map_extent=None, fontsize=10
 ):
     if map_extent is not None:
         ax.set_extent(map_extent, crs=ccrs.PlateCarree())
@@ -303,6 +304,7 @@ def add_lon_lat_labels(
         transform=ax.transAxes,
         ha="right",
         va="bottom",
+        fontsize=fontsize,
     )
     ax.text(
         -0.003,
@@ -312,6 +314,7 @@ def add_lon_lat_labels(
         transform=ax.transAxes,
         ha="right",
         va="top",
+        fontsize=fontsize,
     )
     ax.text(
         0,
@@ -320,6 +323,7 @@ def add_lon_lat_labels(
         transform=ax.transAxes,
         ha="left",
         va="bottom",
+        fontsize=fontsize,
     )
     ax.text(
         1,
@@ -328,6 +332,7 @@ def add_lon_lat_labels(
         transform=ax.transAxes,
         ha="right",
         va="bottom",
+        fontsize=fontsize,
     )
     return map_extent
 
