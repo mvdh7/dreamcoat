@@ -58,3 +58,26 @@ def linspace_gc_route(route, num_per_segment=50, endpoint=True):
         )
     route_line = np.concatenate(route_line, axis=1)
     return route_line
+
+
+def get_route_distance(route):
+    """Calculate distance from point to point along a route.
+
+    Parameters
+    ----------
+    route : (array_like, array_like)
+        The route (longitude, latitude) points.
+
+    Returns
+    -------
+    array_like
+        Distance from the start of the route in km.
+    """
+    route_distance = np.full_like(route[0], 0)
+    for i in range(1, len(route_distance)):
+        route_distance[i] = (
+            gcc.distance_between_points(route[:, i - 1], route[:, i])
+            + route_distance[i - 1]
+        )
+    route_distance /= 1e3
+    return route_distance
