@@ -138,9 +138,9 @@ def polar_to_cartesian(theta, rho):
 
     Parameters
     ----------
-    theta
+    theta : float
         Angle in polar co-ordinates.
-    rho
+    rho : float
         Radius in polar co-ordinates.
 
     Returns
@@ -153,3 +153,37 @@ def polar_to_cartesian(theta, rho):
     x = rho * np.cos(theta)
     y = rho * np.sin(theta)
     return x, y
+
+
+def dd_to_ddm(dd):
+    """Convert decimal degrees into degrees decimal minutes.
+
+    Parameters
+    ----------
+    dd : float
+        (longitude, latitude) in decimal degrees.
+
+    Returns
+    -------
+    str
+        The position(s) in degrees decimal minutes.
+    """
+    single = dd.ndim == 1
+    if single:
+        dd = [dd]
+    ddm = []
+    for d in dd:
+        lon, lat = d
+        ddm.append(
+            "{:02.0f}°{:04.1f}'{}, {:03.0f}°{:04.1f}'{}".format(
+                np.floor(np.abs(lat)),
+                60 * (np.abs(lat) % 1),
+                "SN"[int(lat > 0)],
+                np.floor(np.abs(lon)),
+                60 * (np.abs(lon) % 1),
+                "WE"[int(lon > 0)],
+            )
+        )
+    if single:
+        ddm = ddm[0]
+    return ddm

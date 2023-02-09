@@ -10,6 +10,7 @@ dependencies = [
     "calkulate",
     "cartopy",
     "fsspec",
+    "great_circle_calculator",
     "keyring",
     "koolstof",
     "matplotlib",
