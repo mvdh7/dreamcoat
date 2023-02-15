@@ -536,7 +536,7 @@ def download_surbio(
         + "--latitude-max {} ".format(latitude_max)
         + '--date-min "{} 12:00:00" '.format(date_min)
         + '--date-max "{} 12:00:00" '.format(date_max)
-        + "--depth-min {} --depth-max {} ".format(depth_min, depth_max)
+        + "--depth-min 0.494 --depth-max 0.4941 "
         + "--variable chl --variable dissic --variable fe "
         + "--variable no3 --variable nppv --variable o2 "
         + "--variable ph --variable phyc --variable po4 "
@@ -629,7 +629,7 @@ def download_deepbio(
         + "--latitude-max {} ".format(latitude_max)
         + '--date-min "{} 12:00:00" '.format(date_min)
         + '--date-max "{} 12:00:00" '.format(date_max)
-        + "--depth-min 0.494 --depth-max 0.4941 "
+        + "--depth-min {} --depth-max {} ".format(depth_min, depth_max)
         + "--variable chl --variable dissic --variable fe "
         + "--variable no3 --variable nppv --variable o2 "
         + "--variable ph --variable phyc --variable po4 "
