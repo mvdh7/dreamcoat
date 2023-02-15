@@ -199,7 +199,7 @@ def _get_surbio_filename(
     )
 
 
-def _get_deepphys_filename(
+def _get_deepbio_filename(
     date_min,
     date_max,
     longitude_min,
