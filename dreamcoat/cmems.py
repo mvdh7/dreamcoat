@@ -327,6 +327,8 @@ def download_deepphys(
     longitude_min=-180,
     longitude_max=180,
     username=None,
+    depth_min=0.1,
+    depth_max=10000,
     password=None,
     convert_nc=True,
     delete_nc=True,
@@ -396,7 +398,7 @@ def download_deepphys(
         + "--latitude-max {} ".format(latitude_max)
         + '--date-min "{} 12:00:00" '.format(date_min)
         + '--date-max "{} 12:00:00" '.format(date_max)
-        + "--depth-min 0.494 --depth-max 10000 "
+        + "--depth-min {} --depth-max {} ".format(depth_min, depth_max)
         + "--variable mlotst --variable so --variable thetao "
         + "--variable uo --variable vo --variable zos "
         + "--out-dir {} ".format(filepath)
