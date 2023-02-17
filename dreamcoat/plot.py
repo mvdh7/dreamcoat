@@ -95,17 +95,17 @@ styles = {
     "current_east": dict(
         cmap="RdBu",
         label="Eastwards current velocity / m/s",
-        ship_color="xkcd:kelly green",
+        contrast="xkcd:kelly green",
     ),
     "current_north": dict(
         cmap="RdBu",
         label="Northwards current velocity / m/s",
-        ship_color="xkcd:kelly green",
+        contrast="xkcd:kelly green",
     ),
     "current_speed": dict(
         cmap="cividis",
         label="Current speed / m/s",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "current": dict(
         label="Current speed / m/s",
@@ -113,102 +113,102 @@ styles = {
     "mld": dict(
         cmap="magma_r",
         label="Mixed layer depth / m",
-        ship_color="xkcd:kelly green",
+        contrast="xkcd:kelly green",
     ),
     "salinity": dict(
         cmap="viridis",
         label="Practical salinity",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "ssh": dict(
         cmap="BrBG_r",
         label="Sea surface height / m",
-        ship_color="xkcd:light purple",
+        contrast="xkcd:light purple",
     ),
     "theta": dict(
         cmap="plasma",
         label="Potential temperature / °C",
-        ship_color="xkcd:aqua",
+        contrast="xkcd:aqua",
     ),
     "talk": dict(
         cmap="viridis",
         label="Total alkalinity / µmol kg$^{-1}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "dissic": dict(
         cmap="viridis",
         label="DIC / µmol kg$^{-1}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "ph": dict(
         cmap="plasma_r",
         label="pH (total scale)",
-        ship_color="xkcd:cyan",
+        contrast="xkcd:cyan",
     ),
     "no3": dict(
         cmap="magma",
         label="Nitrate / µmol kg$^{-1}$",
-        ship_color="xkcd:cyan",
+        contrast="xkcd:cyan",
     ),
     "po4": dict(
         cmap="magma",
         label="Phosphate / µmol kg$^{-1}$",
-        ship_color="xkcd:cyan",
+        contrast="xkcd:cyan",
     ),
     "si": dict(
         cmap="magma",
         label="Silicate / µmol kg$^{-1}$",
-        ship_color="xkcd:cyan",
+        contrast="xkcd:cyan",
     ),
     "fe": dict(
         cmap="magma",
         label="Iron / nmol kg$^{-1}$",
-        ship_color="xkcd:cyan",
+        contrast="xkcd:cyan",
     ),
     "chl": dict(
         cmap="magma",
         label="Chlorophyll / mg m$^{-3}$",
-        ship_color="xkcd:cyan",
+        contrast="xkcd:cyan",
     ),
     "o2": dict(
         cmap="cividis",
         label="Oxygen / µmol kg$^{-1}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "spco2": dict(
         cmap="viridis",
         label="Seawater $p$CO$_2$ / µatm",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "nppv": dict(
         cmap="viridis",
         label="NPP / mg-C m$^{-3}$ day$^{-1}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "phyc": dict(
         cmap="viridis",
         label="Phytoplankton / mmol-C m$^{-3}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "density": dict(
         cmap="viridis",
         label="Density / kg dm$^{-3}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "density_anomaly": dict(
         cmap="viridis",
         label="Density anomaly / kg m$^{-3}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
     "aou": dict(
         cmap="RdBu",
         label="AOU / µmol kg$^{-1}$",
-        ship_color="xkcd:green",
+        contrast="xkcd:green",
     ),
     "pic": dict(
         cmap="viridis",
         label="PIC / mmol m$^{-3}$",
-        ship_color="xkcd:strawberry",
+        contrast="xkcd:strawberry",
     ),
 }
 
@@ -356,7 +356,7 @@ def surface_map(
     save_extra="",
     save_figure=False,
     save_path="",
-    ship_color=None,
+    contrast=None,
     ship_distance=None,
     ship_fade_concentric=True,
     ship_lon_lat=None,
@@ -408,7 +408,7 @@ def surface_map(
         Whether to save the figure to file, by default False.
     save_path : str, optional
         The file path to save the figure to, by default "".
-    ship_color : str, optional
+    contrast : str, optional
         What colour to plot the ship's location in, by default None.
     ship_distance : float, optional
         Distance of the concentric circle lines around the ship's location in km, by
@@ -440,8 +440,8 @@ def surface_map(
         fstyles[k].update(styles[k])
     # Finalise settings for the selected variable
     fs = fstyles[fvar].copy()
-    if ship_color is not None:
-        fs["ship_color"] = ship_color
+    if contrast is not None:
+        fs["contrast"] = contrast
     if vmin is not None:
         fs["vmin"] = vmin
     if vmax is not None:
@@ -541,7 +541,7 @@ def surface_map(
             ax,
             *ship_lon_lat,
             distance=ship_distance,
-            color=fs["ship_color"],
+            color=fs["contrast"],
             fade_concentric=ship_fade_concentric,
             show_centre=ship_show_centre,
         )
@@ -572,7 +572,7 @@ def surface_map_daily(
     quiver_visible=False,
     save_figure=False,
     save_path="",
-    ship_color=None,
+    contrast=None,
     ship_distance=None,
     ship_fade_concentric=True,
     ship_lon_lat=None,
@@ -618,7 +618,7 @@ def surface_map_daily(
         Whether to save the figure to file, by default False.
     save_path : str, optional
         The file path to save the figure to, by default "".
-    ship_color : str, optional
+    contrast : str, optional
         What colour to plot the ship's location in, by default None.
     ship_distance : float, optional
         Distance of the concentric circle lines around the ship's location in km, by
@@ -659,7 +659,7 @@ def surface_map_daily(
             save_extra="_{:02.0f}".format(i),
             save_figure=save_figure,
             save_path=save_path,
-            ship_color=ship_color,
+            contrast=contrast,
             ship_distance=ship_distance,
             ship_fade_concentric=ship_fade_concentric,
             ship_lon_lat=ship_lon_lat,
