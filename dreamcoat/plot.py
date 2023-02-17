@@ -91,7 +91,7 @@ def add_credit(ax):
     )
 
 
-var_settings = {
+styles = {
     "current_east": dict(
         cmap="RdBu",
         label="Eastwards current velocity / m/s",
@@ -228,11 +228,11 @@ def _get_data_extent(data, map_extent):
 
 
 def _get_vmin_vmax(data_extent, color_zoom_factor):
-    fvar_settings = {}
+    fstyles = {}
     # Variables centred on zero with vmin = -vmax
     for v in ["current_east", "current_north", "ssh", "aou"]:
         if v in data_extent:
-            fvar_settings.update(
+            fstyles.update(
                 {
                     v: dict(
                         vmin=-np.max(np.abs(data_extent[v])) * color_zoom_factor,
@@ -254,7 +254,7 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
         "pic",
     ]:
         if v in data_extent:
-            fvar_settings.update(
+            fstyles.update(
                 {
                     v: dict(
                         vmin=0,
@@ -276,7 +276,7 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
     ]:
         if v in data_extent:
             var_range = data_extent[v].max() - data_extent[v].min()
-            fvar_settings.update(
+            fstyles.update(
                 {
                     v: dict(
                         vmin=data_extent[v].min()
@@ -286,7 +286,7 @@ def _get_vmin_vmax(data_extent, color_zoom_factor):
                     )
                 }
             )
-    return fvar_settings
+    return fstyles
 
 
 def add_lon_lat_labels(
@@ -435,11 +435,11 @@ def surface_map(
     """
     # Set up dict of settings for all variables
     data_extent = _get_data_extent(data, map_extent)
-    fvar_settings = _get_vmin_vmax(data_extent, color_zoom_factor)
-    for k in fvar_settings:
-        fvar_settings[k].update(var_settings[k])
+    fstyles = _get_vmin_vmax(data_extent, color_zoom_factor)
+    for k in fstyles:
+        fstyles[k].update(styles[k])
     # Finalise settings for the selected variable
-    fs = fvar_settings[fvar].copy()
+    fs = fstyles[fvar].copy()
     if ship_color is not None:
         fs["ship_color"] = ship_color
     if vmin is not None:
@@ -480,7 +480,7 @@ def surface_map(
         dplot,
         aspect=25,
         extend=extend,
-        label=fvar_settings[fvar]["label"],
+        label=fstyles[fvar]["label"],
         location="bottom",
         pad=0.05,
         shrink=0.8,
@@ -634,11 +634,11 @@ def surface_map_daily(
     """
     # Get consistent vmin and vmax to use across all figures
     data_extent = _get_data_extent(data, map_extent)
-    fvar_settings = _get_vmin_vmax(data_extent, color_zoom_factor)
+    fstyles = _get_vmin_vmax(data_extent, color_zoom_factor)
     if vmin is None:
-        vmin = fvar_settings[fvar]["vmin"]
+        vmin = fstyles[fvar]["vmin"]
     if vmax is None:
-        vmax = fvar_settings[fvar]["vmax"]
+        vmax = fstyles[fvar]["vmax"]
     # Loop through days and make plots
     for i in range(data.time.size):
         _, ax = surface_map(
@@ -793,7 +793,7 @@ def surface_timeseries(
         ax.axhline(0, c="k", lw=0.8)
 
     # Axis display settings
-    ax.set_ylabel(var_settings[fvar]["label"])
+    ax.set_ylabel(styles[fvar]["label"])
     locator = mdates.AutoDateLocator(minticks=5, maxticks=12)
     formatter = mdates.ConciseDateFormatter(locator)
     ax.xaxis.set_major_locator(locator)
