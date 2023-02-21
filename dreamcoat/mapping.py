@@ -389,13 +389,13 @@ class Route:
             isinstance(waypoints, np.ndarray)
             and waypoints.shape[0] == 2
             and waypoints.ndim == 2
-        ), "`waypoints` must be a numpy array of shape (2, n)"
+        ), "`waypoints` must be a numpy array of shape (2, n)."
         assert np.all(
             (waypoints[0] >= -180) & (waypoints[0] <= 180)
-        ), "All longitudes must be from -180 to 180"
+        ), "All longitudes must be from -180 to 180."
         assert np.all(
             (waypoints[1] >= -90) & (waypoints[1] <= 90)
-        ), "All latitudes must be from -90 to 90"
+        ), "All latitudes must be from -90 to 90."
         self.waypoints = waypoints
         self.size = waypoints.shape[1]
         self.distance_method = distance_method
