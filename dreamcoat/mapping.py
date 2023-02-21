@@ -1,4 +1,6 @@
+from collections import namedtuple
 import numpy as np
+from geographiclib.geodesic import Geodesic
 import great_circle_calculator.great_circle_calculator as gcc
 
 
@@ -125,3 +127,126 @@ def get_route_distance(route):
         )
     route_distance /= 1e3
     return route_distance
+
+
+def get_distance_geodesic(lon_lat_1, lon_lat_2):
+    """Calculate geodesic distance between a single pair of points in km, based on
+    https://stackoverflow.com/a/45480555
+
+    Parameters
+    ----------
+    lon_lat_1 : array_like
+        (longitude, latitude) of the first point in decimal degrees.
+    lon_lat_2 : array_like
+        (longitude, latitude) of the second point in decimal degrees.
+
+    Returns
+    -------
+    float
+        Distance between the two points in km.
+    """
+    return (
+        Geodesic.WGS84.Inverse(lon_lat_1[1], lon_lat_1[0], lon_lat_2[1], lon_lat_2[0])[
+            "s12"
+        ]
+        / 1e3
+    )
+
+
+def get_distance_gcc(lon_lat_1, lon_lat_2):
+    """Calculate distance between a pair of points in km using great_circle_calculator.
+
+    Parameters
+    ----------
+    lon_lat_1 : array_like
+        (longitude, latitude) of the first point in decimal degrees.
+    lon_lat_2 : array_like
+        (longitude, latitude) of the second point in decimal degrees.
+
+    Returns
+    -------
+    float
+        Distance between the two points in km.
+    """
+    return gcc.distance_between_points(lon_lat_1, lon_lat_2, unit="kilometers")
+
+
+def _get_distance_func(method):
+    assert method in ["gcc", "geodesic"], "`method` must be either 'gcc' or 'geodesic'"
+    if method == "gcc":
+        return get_distance_gcc
+    elif method == "geodesic":
+        return get_distance_geodesic
+
+
+def get_distance(lon_lat_1, lon_lat_2, method="gcc"):
+    """Calculate distance between a pair of points in km using either great_circle_calculator.
+    (default) or geographiclib (more accurate but ~50 times slower).
+    Parameters
+    ----------
+    lon_lat_1 : array_like
+        (longitude, latitude) of the first point in decimal degrees.
+    lon_lat_2 : array_like
+        (longitude, latitude) of the second point in decimal degrees.
+    method : str, optional
+        Which method to use: 'gcc' (default) or 'geodesic'.
+
+    Returns
+    -------
+    float
+        Distance between the two points in km.
+    """
+    return _get_distance_func(method)(lon_lat_1, lon_lat_2)
+
+
+def map_point_to_section(lon_lat_1, lon_lat_2, lon_lat_pt, method="gcc"):
+    """Find the closest point on a line section defined by `lon_lat_1` and `lon_lat_2`
+    to a given point `lon_lat_pt` and calculate various associated properties.
+
+    Parameters
+    ----------
+    lon_lat_1 : array_like
+        (longitude, latitude) of the first point on the section in decimal degrees.
+    lon_lat_2 : array_like
+        (longitude, latitude) of the second point on the section in decimal degrees.
+    lon_lat_pt : array_like
+        (longitude, latitude) of the off-section point in decimal degrees.
+    method : str, optional
+        Which method to use for calculating distances: 'gcc' (default) or 'geodesic'.
+
+    Returns
+    -------
+    namedtuple (SectionPoint) containing fields
+        distance_on_section : float
+            Distance between `lon_lat_1` and the mapping of `lon_lat_pt` onto the
+            section in km.
+        distance_perpendicular : float
+            Distance between `lon_lat_pt` and its mapping onto the section in km.
+        lon_lat : (float, float)
+            (longitude, latitude) of the mapping of `lon_lat_pt` onto the section in
+            decimal degrees.
+        in_section : bool
+            Whether the mapping of `lon_lat_pt` falls within the section.
+    """
+    distance_func = _get_distance_func(method)
+    bearing_section = np.deg2rad(gcc.bearing_at_p1(lon_lat_1, lon_lat_2))
+    bearing_point = np.deg2rad(gcc.bearing_at_p1(lon_lat_1, lon_lat_pt))
+    angle_to_section = bearing_point - bearing_section
+    distance_r0_pt = distance_func(lon_lat_1, lon_lat_pt)
+    section_distance = distance_func(lon_lat_1, lon_lat_2)
+    section_distance_pt = distance_r0_pt * np.sin(np.deg2rad(90) - angle_to_section)
+    lon_lat_pt_section = gcc.point_given_start_and_bearing(
+        lon_lat_1, np.rad2deg(bearing_section), section_distance_pt, unit="kilometers"
+    )
+    in_section = section_distance_pt >= 0 and section_distance_pt <= section_distance
+    distance_perpendicular = distance_func(lon_lat_pt, lon_lat_pt_section)
+    point_on_section = namedtuple(
+        "SectionPoint",
+        ("distance_on_section", "distance_perpendicular", "lon_lat", "in_section"),
+    )
+    return point_on_section(
+        section_distance_pt,
+        distance_perpendicular,
+        lon_lat_pt_section,
+        in_section,
+    )
