@@ -403,9 +403,11 @@ class Route:
         self.build_vpt(distance_method=distance_method)
 
     def build_vpt(self, distance_method="gcc"):
+        """Create a vantage-point tree that can be used to find nearest neighbours."""
         self.vpt = VPTree(self.waypoints.T, _get_distance_func(distance_method))
 
     def find_nearest_waypoint(self, lon_lat):
+        """Find the index of the waypoint closest to `lon_lat`."""
         nearest = self.vpt.get_nearest_neighbor(lon_lat)[1]
         return (
             (self.waypoints[0] == nearest[0]) & (self.waypoints[1] == nearest[1])
@@ -414,6 +416,10 @@ class Route:
     map_point_to_route = map_point_to_route
 
     def interp(self, num_approx=100, endpoint=True):
+        """Interpolate the route to a higher resolution, with the interpolated route
+        stored in the attribute `wp_interp` and corresponding route distances in
+        `wp_distance`.
+        """
         self.wp_interp = linspace_gc_waypoints(
             self.waypoints, num_approx=num_approx, endpoint=endpoint
         )
@@ -422,6 +428,7 @@ class Route:
         )
 
     def get_lon_lat(self, distance, extrapolate=False):
+        """Get the longitude and latitude of a given distance along the route."""
         out_of_range = False
         if distance in self.distance:
             nearest = (self.distance == distance).argmax()
@@ -456,5 +463,6 @@ class Route:
         return lon_lat
 
     def get_distance(self, lon_lat, extrapolate=False, verbose=False):
+        """Get the route distance corresponding to a given longitude and latitude."""
         rp = self.map_point_to_route(lon_lat, extrapolate=extrapolate, verbose=verbose)
         return rp.distance_on_route
