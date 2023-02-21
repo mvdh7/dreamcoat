@@ -2,6 +2,7 @@ from collections import namedtuple
 import numpy as np
 from geographiclib.geodesic import Geodesic
 import great_circle_calculator.great_circle_calculator as gcc
+from vptree import VPTree
 
 
 def linspace_gc(start, stop, num=50, endpoint=True):
@@ -23,35 +24,35 @@ def linspace_gc(start, stop, num=50, endpoint=True):
     (array_like, array_like)
         The (longitude, latitude) of the interpolated route.
     """
-    route_line = np.full((num - (not endpoint), 2), np.nan)
-    route_line[0] = start
+    wp_interp = np.full((num - (not endpoint), 2), np.nan)
+    wp_interp[0] = start
     if endpoint:
-        route_line[-1] = stop
+        wp_interp[-1] = stop
     for i in range(1, num - 1):
-        route_line[i] = gcc.intermediate_point(start, stop, fraction=i / (num - 1))
-    return route_line.T
+        wp_interp[i] = gcc.intermediate_point(start, stop, fraction=i / (num - 1))
+    return wp_interp.T
 
 
-def linspace_gc_route(route, num_approx=100, endpoint=True):
-    """Apply `linspace_gc()` across a series of route points aiming for approximately
+def linspace_gc_waypoints(waypoints, num_approx=100, endpoint=True):
+    """Apply `linspace_gc()` across a series of waypoints, aiming for approximately
     `num_approx` roughly evenly spaced final points.
 
     Parameters
     ----------
-    route : (array_like, array_like)
-        The (longitude, latitude) of the route waypoints.
+    waypoints : (array_like, array_like)
+        The (longitude, latitude) of the waypoints.
     num_approx : int, optional
-        Approximate total number of points in the final route, by default 100.
+        Approximate total number of points in the final interpolation, by default 100.
     endpoint : bool, optional
         Whether to include the final endpoint, by default True.
 
     Returns
     -------
     (array_like, array_like)
-        The (longitude, latitude) of the interpolated route.
+        The (longitude, latitude) of the interpolated waypoints.
     """
     # Calculate relative distance for each route step
-    r_distance = get_route_distance(route)
+    r_distance = get_route_distance(waypoints)
     r_fraction = np.diff(r_distance) / r_distance[-1]
     # Divide num_approx into the steps
     r_pts = (num_approx - 1) * r_fraction
@@ -60,30 +61,30 @@ def linspace_gc_route(route, num_approx=100, endpoint=True):
     r_pts_round[r_zero] += 1
     total_points = np.sum(r_pts_round) + 1
     # Do individual section interpolations and concatenate them
-    route_line = []
+    wp_interp = []
     for i, npts in enumerate(r_pts_round):
-        route_line.append(
+        wp_interp.append(
             linspace_gc(
-                route[:, i],
-                route[:, i + 1],
+                waypoints[:, i],
+                waypoints[:, i + 1],
                 num=npts + 1,
                 endpoint=i == len(r_pts_round) - 1 and endpoint,
             )
         )
-    route_line = np.concatenate(route_line, axis=1)
-    return route_line
+    wp_interp = np.concatenate(wp_interp, axis=1)
+    return wp_interp
 
 
-def linspace_gc_route_cs(route, num_per_segment=50, endpoint=True):
-    """Apply `linspace_gc()` across a series of route points with a constant number
-    of points between each route segment.
+def linspace_gc_waypoints_cs(waypoints, num_per_segment=50, endpoint=True):
+    """Apply `linspace_gc()` across a series of waypoints with a constant number
+    of interpolated points between each pair of waypoints.
 
     Parameters
     ----------
-    route : (array_like, array_like)
-        The (longitude, latitude) of the route waypoints.
+    waypoints : (array_like, array_like)
+        The (longitude, latitude) of the waypoints.
     num_per_segment : int, optional
-        Number of points between each route point, by default 50.
+        Number of points between each pair of waypoints, by default 50.
     endpoint : bool, optional
         Whether to include the final endpoint, by default True.
 
@@ -92,9 +93,9 @@ def linspace_gc_route_cs(route, num_per_segment=50, endpoint=True):
     (array_like, array_like)
         The (longitude, latitude) of the interpolated route.
     """
-    route_line = []
+    wp_interp = []
     for i in range(1, route.shape[0]):
-        route_line.append(
+        wp_interp.append(
             linspace_gc(
                 route[:, i - 1],
                 route[:, i],
@@ -102,31 +103,8 @@ def linspace_gc_route_cs(route, num_per_segment=50, endpoint=True):
                 endpoint=i == route.shape[0] - 1 and endpoint,
             )
         )
-    route_line = np.concatenate(route_line, axis=1)
-    return route_line
-
-
-def get_route_distance(route):
-    """Calculate distance from point to point along a route.
-
-    Parameters
-    ----------
-    route : (array_like, array_like)
-        The route (longitude, latitude) points.
-
-    Returns
-    -------
-    array_like
-        Distance from the start of the route in km.
-    """
-    route_distance = np.full_like(route[0], 0)
-    for i in range(1, len(route_distance)):
-        route_distance[i] = (
-            gcc.distance_between_points(route[:, i - 1], route[:, i])
-            + route_distance[i - 1]
-        )
-    route_distance /= 1e3
-    return route_distance
+    wp_interp = np.concatenate(wp_interp, axis=1)
+    return wp_interp
 
 
 def get_distance_geodesic(lon_lat_1, lon_lat_2):
@@ -199,6 +177,40 @@ def get_distance(lon_lat_1, lon_lat_2, method="gcc"):
     return _get_distance_func(method)(lon_lat_1, lon_lat_2)
 
 
+def get_route_distance(waypoints, method="gcc"):
+    """Calculate distance from point to point along a route.
+
+    Parameters
+    ----------
+    waypoints : (array_like, array_like)
+        The route (longitude, latitude) waypoints.
+    method : str, optional
+        Which method to use: 'gcc' (default) or 'geodesic'.
+
+    Returns
+    -------
+    array_like
+        Distance from the start of the route in km.
+    """
+    route_distance = np.full_like(waypoints[0], 0)
+    for i in range(1, len(route_distance)):
+        route_distance[i] = (
+            get_distance(waypoints[:, i - 1], waypoints[:, i], method=method)
+            + route_distance[i - 1]
+        )
+    return route_distance
+
+
+SectionPoint = namedtuple(
+    "SectionPoint",
+    ("distance_on_section", "distance_perpendicular", "lon_lat", "in_section"),
+)
+RoutePoint = namedtuple(
+    "RoutePoint",
+    ("distance_on_route", "lon_lat", "in_route", "waypoint_nearest"),
+)
+
+
 def map_point_to_section(lon_lat_1, lon_lat_2, lon_lat_pt, method="gcc"):
     """Find the closest point on a line section defined by `lon_lat_1` and `lon_lat_2`
     to a given point `lon_lat_pt` and calculate various associated properties.
@@ -240,13 +252,209 @@ def map_point_to_section(lon_lat_1, lon_lat_2, lon_lat_pt, method="gcc"):
     )
     in_section = section_distance_pt >= 0 and section_distance_pt <= section_distance
     distance_perpendicular = distance_func(lon_lat_pt, lon_lat_pt_section)
-    point_on_section = namedtuple(
-        "SectionPoint",
-        ("distance_on_section", "distance_perpendicular", "lon_lat", "in_section"),
-    )
-    return point_on_section(
+    return SectionPoint(
         section_distance_pt,
         distance_perpendicular,
         lon_lat_pt_section,
         in_section,
     )
+
+
+def map_point_to_route(route, lon_lat, extrapolate=False, verbose=False):
+    """Find the closest point on a `route` to a new `lon_lat` point.
+
+    Parameters
+    ----------
+    route : array_like
+        (longitude, latitude) of the route waypoints.
+    lon_lat : array_like
+        (longitude, latitude) of the new off-route point.
+    extrapolate : bool, optional
+        Whether to extrapolate beyond the ends of the route, by default False.
+    verbose : bool, optional
+        Whether to report on progress, by default False.
+
+    Results
+    -------
+    namedtuple (RoutePoint) containing fields
+        distance_on_route : float
+            Distance along the route up to the mapping of `lon_lat_pt` onto the route
+            in km.
+        lon_lat : (float, float)
+            (longitude, latitude) of the mapping of `lon_lat` onto the route in decimal
+            degrees.
+        in_route : bool
+            Whether the mapping of `lon_lat` falls within the route.
+        waypoint_nearest : int
+            The index of the nearest waypoint in `route.waypoints`.
+    """
+
+    def printv(*args, **kwargs):
+        if verbose:
+            print(*args, **kwargs)
+
+    nearest = route.find_nearest_waypoint(lon_lat)
+    section = None
+    # Get the next section after the nearest waypoint, if possible
+    section_next = None
+    if nearest < route.size - 1:
+        printv("Nearest waypoint is not the last waypoint.")
+        section_next = map_point_to_section(
+            route.waypoints[:, nearest],
+            route.waypoints[:, nearest + 1],
+            lon_lat,
+            method=route.distance_method,
+        )
+    # Get the section directly before the nearest waypoint, if possible
+    section_prev = None
+    if nearest > 0:
+        printv("Nearest waypoint is not the first waypoint.")
+        section_prev = map_point_to_section(
+            route.waypoints[:, nearest],
+            route.waypoints[:, nearest - 1],
+            lon_lat,
+            method=route.distance_method,
+        )
+        # If using previous section, distance needs to be negative
+        section_prev = SectionPoint(
+            -section_prev.distance_on_section,
+            section_prev.distance_perpendicular,
+            section_prev.lon_lat,
+            section_prev.in_section,
+        )
+    # Decide which of the two sections to use
+    if section_next is not None and section_prev is not None:
+        printv("Nearest waypoint is neither the first nor the last waypoint.")
+        if section_next.in_section and section_prev.in_section:
+            printv(
+                " Point falls within both sections either side of the nearest waypoint."
+            )
+            if (
+                section_next.distance_perpendicular
+                <= section_prev.distance_perpendicular
+            ):
+                printv("  Point is closer to the section after the nearest waypoint.")
+                section = section_next
+            else:
+                printv("  Point is closer to the section before the nearest waypoint.")
+                section = section_prev
+        elif section_next.in_section:
+            printv(" Point falls only in the section after the nearest waypoint.")
+            section = section_next
+        elif section_prev.in_section:
+            printv(" Point falls only in the section before the nearest waypoint.")
+            section = section_prev
+        else:
+            printv(" Point does not fall in either section.")
+            section = SectionPoint(0, 0, route.waypoints[:, nearest], True)
+    elif section_next is not None:
+        printv("Nearest waypoint is the first waypoint.")
+        if section_next.in_section:
+            printv(" Point falls within the first section.")
+            section = section_next
+        else:
+            printv(" Point does not fall within the first section.")
+            if extrapolate:
+                printv("  Extrapolating before the first section.")
+                section = section_next
+            else:
+                printv("  Returning the first waypoint.")
+                section = SectionPoint(0, 0, route.waypoints[:, nearest], True)
+    elif section_prev is not None:
+        printv("Nearest waypoint is the last waypoint.")
+        if section_prev.in_section:
+            printv(" Point falls within the last section.")
+            section = section_prev
+        else:
+            printv(" Point does not fall within the last section.")
+            if extrapolate:
+                printv("  Extrapolating after the last section.")
+                section = section_prev
+            else:
+                printv("  Returning the last waypoint.")
+                section = SectionPoint(0, 0, route.waypoints[:, nearest], True)
+    # Convert section properties to route properties
+    route_point = RoutePoint(
+        route.distance[nearest] + section.distance_on_section,
+        section.lon_lat,
+        section.in_section,
+        nearest,
+    )
+    return route_point
+
+
+class Route:
+    def __init__(self, waypoints, distance_method="gcc"):
+        assert (
+            isinstance(waypoints, np.ndarray)
+            and waypoints.shape[0] == 2
+            and waypoints.ndim == 2
+        ), "`waypoints` must be a numpy array of shape (2, n)"
+        assert np.all(
+            (waypoints[0] >= -180) & (waypoints[0] <= 180)
+        ), "All longitudes must be from -180 to 180"
+        assert np.all(
+            (waypoints[1] >= -90) & (waypoints[1] <= 90)
+        ), "All latitudes must be from -90 to 90"
+        self.waypoints = waypoints
+        self.size = waypoints.shape[1]
+        self.distance_method = distance_method
+        self.distance = get_route_distance(waypoints, method=distance_method)
+        self.build_vpt(distance_method=distance_method)
+
+    def build_vpt(self, distance_method="gcc"):
+        self.vpt = VPTree(self.waypoints.T, _get_distance_func(distance_method))
+
+    def find_nearest_waypoint(self, lon_lat):
+        nearest = self.vpt.get_nearest_neighbor(lon_lat)[1]
+        return (
+            (self.waypoints[0] == nearest[0]) & (self.waypoints[1] == nearest[1])
+        ).argmax()
+
+    map_point_to_route = map_point_to_route
+
+    def interp(self, num_approx=100, endpoint=True):
+        self.wp_interp = linspace_gc_waypoints(
+            self.waypoints, num_approx=num_approx, endpoint=endpoint
+        )
+        self.wp_distance = get_route_distance(
+            self.wp_interp, method=self.distance_method
+        )
+
+    def get_lon_lat(self, distance, extrapolate=False):
+        out_of_range = False
+        if distance in self.distance:
+            nearest = (self.distance == distance).argmax()
+            lon_lat = self.waypoints[:, nearest]
+        else:
+            if distance < 0:
+                after = 1
+                before = 0
+                out_of_range = True
+            elif distance > self.distance.max():
+                after = -1
+                before = -2
+                out_of_range = True
+            else:
+                after_point = distance < self.distance
+                after = after_point.argmax()
+                before = after - 1
+            if not extrapolate and out_of_range:
+                if distance < 0:
+                    lon_lat = self.waypoints[:, 0]
+                elif distance > self.distance.max():
+                    lon_lat = self.waypoints[:, -1]
+            else:
+                section_fraction = (distance - self.distance[before]) / (
+                    self.distance[after] - self.distance[before]
+                )
+                lon_lat = gcc.intermediate_point(
+                    self.waypoints[:, before],
+                    self.waypoints[:, after],
+                    fraction=section_fraction,
+                )
+        return lon_lat
+
+    def get_distance(self, lon_lat, extrapolate=False, verbose=False):
+        rp = self.map_point_to_route(lon_lat, extrapolate=extrapolate, verbose=verbose)
+        return rp.distance_on_route
