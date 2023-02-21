@@ -7,6 +7,30 @@ import koolstof as ks
 from . import convert, meta
 
 
+rename_phys = {
+    "mlotst": "mld",
+    "so": "salinity",
+    "thetao": "theta",
+    "uo": "current_east",
+    "vo": "current_north",
+    "zos": "ssh",
+}
+rename_bio = {
+    "talk": "alkalinity",
+    "dissic": "dic",
+    "ph": "pH",
+    "no3": "nitrate",
+    "po4": "phosphate",
+    "si": "silicate",
+    "fe": "iron",
+    "chl": "chlorophyll",
+    "o2": "oxygen",
+    "spco2": "pCO2",
+    "nppv": "npp",
+    "phyc": "phytoplankton",
+}
+
+
 def _get_filename_ending(
     date_min=None,
     date_max=None,
@@ -690,16 +714,7 @@ def open_surphys(
     )
     cmems = xr.open_dataset(filepath + filename, engine="zarr").isel(depth=0)
     cmems["current_speed"] = np.sqrt(cmems.uo**2 + cmems.vo**2)
-    cmems = cmems.rename(
-        {
-            "mlotst": "mld",
-            "so": "salinity",
-            "thetao": "theta",
-            "uo": "current_east",
-            "vo": "current_north",
-            "zos": "ssh",
-        }
-    )
+    cmems = cmems.rename(rename_cmems_phys)
     # Add the vertical current speed if requested, which has to be downloaded separately
     if with_current_vertical:
         cmems["current_vertical"] = (
