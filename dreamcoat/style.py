@@ -53,14 +53,17 @@ class Style:
             alpha=self.alpha, cmap=self.cmap, contrast=self.contrast, label=self.label
         )
 
-    def get_vmin_vmax(self, values):
+    def get_vmin_vmax(self, values, percentile=1):
         """Compute appropriate vmin and vmax values of a given variable for given values."""
         values = np.array(values)
         values = values[~np.isnan(values)]
         # Variables centred on zero with vmin = -vmax
         if self.name in ["current_east", "current_north", "ssh", "aou"]:
-            vmin = -np.max(np.abs(values))
-            vmax = np.max(np.abs(values))
+            lower = np.percentile(values, percentile)
+            upper = np.percentile(values, 100 - percentile)
+            limit = np.max((np.abs(lower), np.abs(upper)))
+            vmin = -limit
+            vmax = limit
         # Variables with lowest values close to, but not lower than, zero
         elif self.name in [
             "mld",
@@ -75,7 +78,7 @@ class Style:
             "pic",
         ]:
             vmin = 0
-            vmax = np.percentile(values, 99)
+            vmax = np.percentile(values, 100 - percentile)
         # Other variables
         elif self.name in [
             "alkalinity",
@@ -88,9 +91,8 @@ class Style:
             "salinity",
             "density_anomaly",
         ]:
-            var_range = np.max(values) - np.min(values)
-            vmin = np.min(values)
-            vmax = np.max(values)
+            vmin = np.percentile(values, percentile)
+            vmax = np.percentile(values, 100 - percentile)
         # np.percentile(modis.pic.data[~np.isnan(modis.pic.data)], 99.5)
         return dict(vmin=vmin, vmax=vmax)
 
@@ -116,6 +118,7 @@ current = Style(
     name="current",
     label="Current speed / m/s",
 )
+depth = Style(name="depth", label="Depth / m")
 mld = Style(
     name="mld",
     cmap="magma_r",
@@ -134,6 +137,11 @@ theta = Style(
     name="theta",
     cmap="plasma",
     label="Potential temperature / °C",
+)
+temperature = Style(
+    name="temperature",
+    cmap="plasma",
+    label="Temperature / °C",
 )
 alkalinity = Style(
     name="alkalinity",
@@ -210,6 +218,7 @@ pic = Style(
 # Assemble the Styles into a dict for convenience
 styles = {
     "default": default,
+    "depth": depth,
     "dic": dic,
     "theta": theta,
     "current_east": current_east,
@@ -235,4 +244,5 @@ styles = {
     "density_anomaly": density_anomaly,
     "aou": aou,
     "pic": pic,
+    "temperature": temperature,
 }

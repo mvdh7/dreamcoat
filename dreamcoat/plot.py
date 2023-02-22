@@ -78,7 +78,7 @@ def add_credit(ax):
         The axes to add the credit to.
     """
     ax.text(
-        1.005,
+        1.008,
         0,
         "dreamcoat {}".format(meta.version_colour),
         # "dreamcoat {} (v{})".format(meta.version_colour, meta.version_number),

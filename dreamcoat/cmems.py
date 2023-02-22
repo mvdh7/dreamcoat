@@ -2,10 +2,10 @@ import os
 from datetime import date
 import numpy as np
 import xarray as xr
+import gsw
 import calkulate as calk
 import koolstof as ks
 from . import convert, meta
-
 
 rename_phys = {
     "mlotst": "mld",
@@ -893,3 +893,131 @@ def open_surface(
         }
     )
     return surface
+
+
+def open_phys_and_bio(
+    filename_phys="cmems_phys.zarr", filename_bio="cmems_bio.zarr", filepath="."
+):
+    """Read a pair of CMEMS physical and biogeochemical files that correspond to the
+    same time and space domains together, merge into a single dataset and compute a
+    bunch of extra variables of interest.
+
+    Parameters
+    ----------
+    filename_phys : str, optional
+        Filename for the CMEMS physical dataset, by default "cmems_phys.zarr".
+    filename_bio : str, optional
+        Filename for the CMEMS biogeochemical dataset, by default "cmems_bio.zarr".
+    filepath : str, optional
+        Path to both datasets excluding a trailing file separator, by default ".".
+
+    Returns
+    -------
+    xarray.Dataset
+        The combined CMEMS dataset.
+    """
+    # Import CMEMS datasets
+    cmems = xr.open_dataset(
+        os.sep.join((filepath, filename_phys)), engine="zarr"
+    ).rename(rename_phys)
+    cmems_bio = xr.open_dataset(
+        os.sep.join((filepath, filename_bio)),
+        engine="zarr",
+    ).rename(rename_bio)
+    # Do GSW calculations
+    cmems["pressure"] = gsw.p_from_z(-cmems.depth, cmems.latitude)
+    cmems["pressure"].attrs.update(
+        {
+            "long_name": "Hydrostatic pressure",
+            "standard_name": "pressure",
+            "unit_long": "decibar",
+            "units": "dbar",
+        }
+    )
+    cmems["salinity_absolute"] = gsw.SA_from_SP(
+        cmems.salinity, cmems.pressure, cmems.longitude, cmems.latitude
+    )
+    cmems["salinity_absolute"].attrs.update(
+        {
+            "long_name": "Absolute salinity",
+            "standard_name": "salinity_absolute",
+            "unit_long": "grams per kilogram",
+            "units": "g/kg",
+        }
+    )
+    cmems["temperature_conservative"] = gsw.CT_from_pt(
+        cmems.salinity_absolute, cmems.theta
+    )
+    cmems["temperature_conservative"].attrs.update(
+        {
+            "long_name": "Conservative temperature",
+            "standard_name": "temperature_conservative",
+            "unit_long": "degrees Celsius",
+            "units": "degrees_C",
+        }
+    )
+    cmems["density"] = (
+        gsw.rho(cmems.salinity_absolute, cmems.temperature_conservative, cmems.pressure)
+        / 1000
+    )
+    cmems["density"].attrs.update(
+        {
+            "long_name": "Density in situ",
+            "standard_name": "density",
+            "unit_long": "kilograms per litre",
+            "units": "kg/L",
+        }
+    )
+    # Move bio variables across to main dataset and interpolate them onto the same grid
+    for k, v in cmems_bio.items():
+        cmems[k] = v.interp_like(cmems.theta, method="nearest")
+    # Convert concentrations (per m3) to substance contents (per kg)
+    dvars = [
+        "oxygen",
+        "nitrate",
+        "phosphate",
+        "silicate",
+        "alkalinity",
+        "dic",
+        "iron",
+    ]
+    for v in dvars:
+        cmems[v] /= cmems.density
+    # Adjust other units to PyCO2SYS standards
+    cmems["alkalinity"] *= 1e3  # now µmol/kg
+    cmems["dic"] *= 1e3  # now µmol/kg
+    cmems["pCO2"] /= 101325e-6  # now µatm
+    cmems["iron"] *= 1e3  # now nmol/kg
+    # Update Dataset attributes to reflect adjusted units
+    umolkg = ["alkalinity", "dic", "oxygen", "nitrate", "phosphate", "silicate"]
+    for v in umolkg:
+        cmems[v].attrs.update(
+            {
+                "units": "µmol kg-1",
+                "unit_long": "micromoles per kilogram seawater",
+            }
+        )
+    cmems["iron"].attrs.update(
+        {
+            "units": "nmol kg-1",
+            "unit_long": "nanomoles per kilogram seawater",
+        }
+    )
+    cmems["pCO2"].attrs.update(
+        {
+            "units": "µatm",
+            "unit_long": "microatmospheres",
+        }
+    )
+    # Calculate additional variables of interest
+    cmems["aou"] = ks.aou_GG92(
+        oxygen=cmems.oxygen, temperature=cmems.theta, salinity=cmems.salinity
+    )[0]
+    cmems["aou"].attrs.update(
+        {
+            "long_name": "Apparent oxygen utilisation from potential temperature",
+            "units": "µmol kg-1",
+            "unit_long": "micromoles per kilogram seawater",
+        }
+    )
+    return cmems
