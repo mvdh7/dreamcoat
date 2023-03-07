@@ -3,6 +3,7 @@ import numpy as np
 from geographiclib.geodesic import Geodesic
 import great_circle_calculator.great_circle_calculator as gcc
 from vptree import VPTree
+from . import degrees_decimal_minutes
 
 
 def linspace_gc(start, stop, num=50, endpoint=True):
@@ -384,6 +385,8 @@ def map_point_to_route(route, lon_lat, extrapolate=False, verbose=False):
 
 
 class Route:
+    """ """
+
     def __init__(self, waypoints, distance_method="gcc"):
         assert (
             isinstance(waypoints, np.ndarray)
