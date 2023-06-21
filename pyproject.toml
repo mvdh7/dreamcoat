@@ -1,5 +1,23 @@
 [build-system]
-requires = ["setuptools"]
+requires = [
+    "setuptools", 
+    "calkulate",
+    "cartopy",
+    "fsspec",
+    "great_circle_calculator",
+    "gsw",
+    "keyring",
+    "koolstof",
+    "matplotlib",
+    "motuclient",
+    "napari",
+    "netcdf4",
+    "numpy",
+    "scipy",
+    "xarray",
+    "yagmail",
+    "zarr",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -11,6 +29,7 @@ dependencies = [
     "cartopy",
     "fsspec",
     "great_circle_calculator",
+    "gsw",
     "keyring",
     "koolstof",
     "matplotlib",
@@ -26,4 +45,4 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools.dynamic]
-version = {attr = "dreamcoat.__version__"}
+version = {attr = "dreamcoat.meta.version_number"}
