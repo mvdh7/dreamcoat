@@ -12,7 +12,9 @@ nav:
 theme:
   name: material
   palette:
-    scheme: dreamcoat-red
+    scheme: slate
+    primary: yellow
+    accent: amber
   features:
     - navigation.instant
 
