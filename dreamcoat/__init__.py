@@ -17,7 +17,7 @@ primarily designed as a personal tool so I probably won't be able to help out if
 stuck; nothing is guaranteed not to break between versions, and the documentation
 (https://mvdh.xyz/dreamcoat) may be incomplete or out of date.
 
-The docstring examples assume that `dreamcoat` has been imported as ``dc``::
+The docstring examples assume that `dreamcoat` has been imported as ``dc``:
 
   >>> import dreamcoat as dc
 
@@ -25,25 +25,27 @@ Available subpackages
 ---------------------
 cmems
     Tools to import and open CMEMS data files
-    (https://data.marine.copernicus.eu/products)
+    (https://data.marine.copernicus.eu/products).
 convert
-    Functions to convert between different units and formats
+    Functions to convert between different units and formats.
+ctd
+    Dealing with CTD data files.
 mapping
-    Working with data in (longitude, latitude) space
+    Working with data in (longitude, latitude) space.
 meta
-    Metadata for `dreamcoat`
+    Metadata for `dreamcoat`.
 modis
     Tools to import and open data from the MODIS satellites
-    (https://oceancolor.gsfc.nasa.gov/)
+    (https://oceancolor.gsfc.nasa.gov/).
 plot
-    Shortcuts for data visualisations
+    Shortcuts for data visualisations.
 send
-    Send files by email
+    Send files by email.
 style
-    Get colour schemes and nicely formatted labels based on variable names
+    Get colour schemes and nicely formatted labels based on variable names.
 """
 
-from . import convert, cmems, mapping, meta, modis, plot, send, style
+from . import convert, cmems, ctd, mapping, meta, modis, plot, send, style
 from .mapping import Route, get_route_distance, linspace_gc, linspace_gc_waypoints
 from .mapping.degrees_decimal_minutes import DegreesDecimalMinutes
 

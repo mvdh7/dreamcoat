@@ -1,3 +1,30 @@
+"""dreamcoat.mapping
+=================
+A set of tools for helping with geographic mapping and routing.
+
+Functions
+---------
+linspace_gc
+    Return evenly spaced points along a great circle.
+linspace_gc_waypoints
+    Apply `linspace_gc` across a series of waypoints, aiming for evenly spaced points.
+linspace_gc_waypoints_cs
+    Apply `linspace_gc` across a series of waypoints, with a constant number of points
+    between each pair.
+get_distance_geodesic
+    Calculate geodesic distance between a single pair of points in km.
+get_distance_gcc
+    Calculate distance between a pair of points in km using great_circle_calculator.
+get_distance
+    Calculate distance between a pair of points.
+get_route_distance
+    Calculate distance from point to point along a route.
+map_point_to_section
+    Find the closest point on a single line section to a given point.
+map_point_to_route
+    Find the closest point on a route to a new point.
+"""
+
 from collections import namedtuple
 import numpy as np
 from geographiclib.geodesic import Geodesic
