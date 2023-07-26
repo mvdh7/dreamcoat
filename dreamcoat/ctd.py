@@ -128,6 +128,60 @@ def read_btl_raw(filename):
     return btl_raw
 
 
+def read_bl(filename_bl):
+    """Read the bottle numbers and datetime from a .bl file from the CTD.
+
+    Parameters
+    ----------
+    filename_bl : str
+        The filename (and path) for the .bl file.
+
+    Returns
+    -------
+    pd.DataFrame
+        The bottle numbers and datetime of bottle firing.
+    """
+    with open(filename_bl, "r") as f:
+        bl = f.read().splitlines()
+    skiprows = 0
+    while not bl[skiprows].startswith("1, 1,"):
+        skiprows += 1
+    bl = pd.read_csv(
+        filename_bl,
+        skiprows=skiprows,
+        header=None,
+        names=["bottle", "x", "datetime", "y", "z"],
+    ).drop(columns=["x", "y", "z"])
+    bl["datetime"] = pd.to_datetime(bl.datetime)
+    bl["datenum"] = mdates.date2num(bl.datetime)
+    return bl
+
+
+def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl):
+    ctd = read_cnv_1Hz(filename_cnv_1Hz)
+    bl = read_bl(filename_bl)
+    # Make new btl table
+    btl = bl.set_index("bottle")
+    # Add data from 30 seconds before firing for each sensor
+    time_before_firing = pd.Timedelta("30s")
+    for c in ctd.columns:
+        if c not in btl:
+            btl[c] = np.nan
+            btl[c + "_std"] = np.nan
+            btl[c + "_flag"] = np.nan
+    ctd["bottle"] = 0
+    for i, row in btl.iterrows():
+        L = (ctd.datetime > row.datetime - time_before_firing) & (
+            ctd.datetime <= row.datetime
+        )
+        ctd.loc[L, "bottle"] = i
+        for c in ctd.columns:
+            if c not in ["bottle", "datetime", "datenum"]:
+                btl.loc[i, c] = ctd.loc[L, c].mean()
+                btl.loc[i, c + "_std"] = ctd.loc[L, c].std()
+    return ctd, btl
+
+
 def read_ctd_create_btl(filename_cnv_1Hz, filename_btl_raw):
     ctd = read_cnv_1Hz(filename_cnv_1Hz)
     btl_raw = read_btl_raw(filename_btl_raw)
