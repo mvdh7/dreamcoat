@@ -4,15 +4,17 @@ repo_name: mvdh7/dreamcoat
 
 nav:
   - Overview: index.md
-  - CMEMS forecasts: cmems.md
-  - MODIS satellites: modis.md
-  - Sending data: send.md
+  # - CMEMS forecasts: cmems.md
+  # - MODIS satellites: modis.md
+  # - Sending data: send.md
   - Version history: versions.md
 
 theme:
   name: material
   palette:
-    scheme: dreamcoat-red
+    scheme: slate
+    primary: yellow
+    accent: amber
   features:
     - navigation.instant
 

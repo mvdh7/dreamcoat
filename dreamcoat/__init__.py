@@ -30,7 +30,7 @@ convert
     Functions to convert between different units and formats.
 ctd
     Dealing with CTD data files.
-mapping
+maps
     Working with data in (longitude, latitude) space.
 meta
     Metadata for `dreamcoat`.
@@ -45,9 +45,15 @@ style
     Get colour schemes and nicely formatted labels based on variable names.
 """
 
-from . import convert, cmems, ctd, mapping, meta, modis, plot, send, style
-from .mapping import Route, get_route_distance, linspace_gc, linspace_gc_waypoints
-from .mapping.degrees_decimal_minutes import DegreesDecimalMinutes
+from . import convert, cmems, ctd, maps, meta, modis, plot, send, style
+from .maps import (
+    Route,
+    get_route_distance,
+    linspace_gc,
+    linspace_gc_waypoints,
+    build_vptree,
+)
+from .maps.degrees_decimal_minutes import DegreesDecimalMinutes
 
 DDM = DegreesDecimalMinutes
 from .meta import __version__, hello
