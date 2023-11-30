@@ -104,7 +104,6 @@ def read_btl_raw(filename):
     # Find number of header lines to skip and get column headers and other info
     with open(filename, "r", encoding="ascii") as f:
         skiprows = -1
-        names = []
         ctd_Hz_line = "*"
         while ctd_Hz_line.startswith("*") or ctd_Hz_line.startswith("#"):
             ctd_Hz_line = f.readline()
