@@ -213,8 +213,8 @@ def get_route_distance(waypoints, method="gcc"):
 
     Parameters
     ----------
-    waypoints : (array_like, array_like)
-        The route (longitude, latitude) waypoints.
+    waypoints : array_like
+        The route (longitude, latitude) waypoints as a size (2, n) np.array.
     method : str, optional
         Which method to use: 'gcc' (default) or 'geodesic'.
 
