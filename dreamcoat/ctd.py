@@ -1,3 +1,4 @@
+import textwrap
 import pandas as pd
 import numpy as np
 from matplotlib import dates as mdates
@@ -86,7 +87,8 @@ def read_cnv_1Hz(filename):
             encoding_errors="replace",
             names=names,
             skiprows=skiprows,
-            delim_whitespace=True,
+            # delim_whitespace=True,
+            sep=r"\s+",
         )
         .drop(columns=names_duplicate)
         .rename(columns=ctd_renamer)
@@ -100,31 +102,96 @@ def read_cnv_1Hz(filename):
     return ctd_Hz
 
 
-def read_btl_raw(filename):
-    # Find number of header lines to skip and get column headers and other info
-    with open(filename, "r", encoding="ascii") as f:
+def read_btl_raw(filename, colwidths=11, encoding="unicode_escape"):
+    """Import a btl file from the CTD with minimal processing.
+
+    Parameters
+    ----------
+    filename : str
+        The btl filename (and path).
+    colwidths : int, optional
+        Width of each data column in the file, by default 11.
+    encoding : str, optional
+        Encoding of the .btl file, by default "unicode_escape".
+
+    Returns
+    -------
+    pandas.DataFrame
+        The btl file with minimal processing.
+    """
+    # Find number of header lines to skip
+    with open(filename, "r", encoding=encoding) as f:
         skiprows = -1
         ctd_Hz_line = "*"
         while ctd_Hz_line.startswith("*") or ctd_Hz_line.startswith("#"):
             ctd_Hz_line = f.readline()
             skiprows += 1
-    # Open the file
-    btl_raw = (
-        pd.read_fwf(filename, skiprows=skiprows, encoding="ascii")
-        .rename(columns=ctd_Renamer)
-        .iloc[1:]
+    # This really awkward way of extracting the column headers is because sometimes they
+    # run into each other (without whitespace in between) in the .btl files, which
+    # prevents pandas from inferring the column widths correctly:
+    headers = textwrap.wrap(
+        ctd_Hz_line.replace(" ", "_"), width=colwidths, break_on_hyphens=False
     )
-    # Parse datetime
-    btl_raw["date"] = btl_raw.Date
-    btl_raw["time"] = btl_raw.Date
-    btl_raw.loc[btl_raw.bottle.isnull(), "date"] = np.nan
-    btl_raw.loc[~btl_raw.bottle.isnull(), "time"] = np.nan
-    btl_raw.date.fillna(method="pad", inplace=True)
-    btl_raw.time.fillna(method="bfill", inplace=True)
-    btl_raw["datetime"] = pd.to_datetime(btl_raw.date + "T" + btl_raw.time)
-    btl_raw["datenum"] = mdates.date2num(btl_raw.datetime)
-    btl_raw.drop(columns=["Date", "date", "time"], inplace=True)
+    headers = [h.replace("_", "") for h in headers]
+    headers = [ctd_Renamer[h] if h in ctd_Renamer else h for h in headers]
+    headers.append("type")
+    headers = {k: v for k, v in enumerate(headers)}
+    # Now we can (hopefully) import the file
+    btl_raw = pd.read_fwf(
+        filename, skiprows=skiprows + 2, encoding=encoding, header=None
+    ).rename(columns=headers)
     return btl_raw
+
+
+def read_btl(filename, station=None, **kwargs):
+    """Import a btl file from the CTD and format it nicely.
+
+    Parameters
+    ----------
+    filename : str
+        The btl filename (and path).
+    station : str or int, optional
+        The station number (which is added as a column), by default None.
+    **kwargs
+        Additional kwargs to pass to read_btl_raw().
+
+    Returns
+    -------
+    pandas.DataFrame
+        The nicely formatted bottle file.
+    """
+    # Read in the raw file
+    btl = read_btl_raw(filename, **kwargs)
+    # Parse datetime
+    btl["date"] = btl.Date
+    btl["time"] = btl.Date
+    btl.loc[btl.bottle.isnull(), "date"] = np.nan
+    btl.loc[~btl.bottle.isnull(), "time"] = np.nan
+    btl["date"] = btl.date.ffill()
+    btl["time"] = btl.time.bfill()
+    btl["datetime"] = pd.to_datetime(btl.date + "T" + btl.time)
+    btl["datenum"] = mdates.date2num(btl.datetime)
+    btl.drop(columns=["Date", "date", "time"], inplace=True)
+    # Put sdevs into the avg rows
+    for c in ctd_renamer.values():  # first just copy the complete columns
+        if c in btl and c != "bottle":
+            btl[c + "_sd"] = btl[c]
+    btl_avg = btl.type == "(avg)"
+    btl_sdev = btl.type == "(sdev)"
+    for c in ctd_renamer.values():
+        if c in btl and c != "bottle":
+            btl.loc[btl_sdev, c] = np.nan
+            btl.loc[btl_avg, c + "_sd"] = np.nan
+            btl[c + "_sd"] = btl[c + "_sd"].bfill()
+    btl = btl[btl_avg].drop(columns="type").copy()
+    # Add station column
+    btl["station"] = station
+    # Put data columns into alphabetical order
+    btl_columns = btl.columns.sort_values()
+    btl_starters = ["station", "bottle", "datetime", "datenum"]
+    btl_columns = [*btl_starters, *btl_columns.drop(btl_starters)]
+    btl = btl[btl_columns]
+    return btl
 
 
 def read_bl(filename_bl):
