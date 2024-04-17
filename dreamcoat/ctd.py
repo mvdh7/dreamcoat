@@ -204,7 +204,7 @@ def read_btl(filename, station=None, **kwargs):
         lon = " E".find(lon[2]) * float(lon[0]) + float(lon[1]) / 60
         btl_extras["longitude"] = lon
     # Add station and other extra columns
-    btl["station"] = station
+    btl["station"] = int(station)
     for k, v in btl_extras.items():
         btl[k] = v
     # Put data columns into alphabetical order
@@ -212,6 +212,10 @@ def read_btl(filename, station=None, **kwargs):
     btl_starters = ["station", "bottle", *btl_extras.keys(), "datetime", "datenum"]
     btl_columns = [*btl_starters, *btl_columns.drop(btl_starters)]
     btl = btl[btl_columns]
+    # Create station_bottle column and set as index
+    btl["bottle"] = btl.bottle.astype(int)
+    btl["station_bottle"] = btl.station.astype(str) + "-" + btl.bottle.astype(str)
+    btl = btl.set_index("station_bottle")
     return btl
 
 
