@@ -119,19 +119,26 @@ def read_btl_raw(filename, colwidths=11, encoding="unicode_escape"):
     -------
     pandas.DataFrame
         The btl file with minimal processing.
+    dict
+        Other potentially useful information.
     """
+    btl_extras = {}
     # Find number of header lines to skip
     with open(filename, "r", encoding=encoding) as f:
         skiprows = -1
-        ctd_Hz_line = "*"
-        while ctd_Hz_line.startswith("*") or ctd_Hz_line.startswith("#"):
-            ctd_Hz_line = f.readline()
+        btl_line = "*"
+        while btl_line.startswith("*") or btl_line.startswith("#"):
+            btl_line = f.readline()
+            if btl_line.startswith("* NMEA Latitude"):
+                btl_extras["latitude"] = btl_line.split(" = ")[1]
+            elif btl_line.startswith("* NMEA Longitude"):
+                btl_extras["longitude"] = btl_line.split(" = ")[1]
             skiprows += 1
     # This really awkward way of extracting the column headers is because sometimes they
     # run into each other (without whitespace in between) in the .btl files, which
     # prevents pandas from inferring the column widths correctly:
     headers = textwrap.wrap(
-        ctd_Hz_line.replace(" ", "_"), width=colwidths, break_on_hyphens=False
+        btl_line.replace(" ", "_"), width=colwidths, break_on_hyphens=False
     )
     headers = [h.replace("_", "") for h in headers]
     headers = [ctd_Renamer[h] if h in ctd_Renamer else h for h in headers]
@@ -141,7 +148,7 @@ def read_btl_raw(filename, colwidths=11, encoding="unicode_escape"):
     btl_raw = pd.read_fwf(
         filename, skiprows=skiprows + 2, encoding=encoding, header=None
     ).rename(columns=headers)
-    return btl_raw
+    return btl_raw, btl_extras
 
 
 def read_btl(filename, station=None, **kwargs):
@@ -162,7 +169,7 @@ def read_btl(filename, station=None, **kwargs):
         The nicely formatted bottle file.
     """
     # Read in the raw file
-    btl = read_btl_raw(filename, **kwargs)
+    btl, btl_extras = read_btl_raw(filename, **kwargs)
     # Parse datetime
     btl["date"] = btl.Date
     btl["time"] = btl.Date
@@ -185,11 +192,24 @@ def read_btl(filename, station=None, **kwargs):
             btl.loc[btl_avg, c + "_sd"] = np.nan
             btl[c + "_sd"] = btl[c + "_sd"].bfill()
     btl = btl[btl_avg].drop(columns="type").copy()
-    # Add station column
+    # Parse longitude and latitude, if present in btl_extras
+    if "latitude" in btl_extras:
+        lat = btl_extras["latitude"].replace("\n", "")
+        lat = lat.split()
+        lat = " N".find(lat[2]) * float(lat[0]) + float(lat[1]) / 60
+        btl_extras["latitude"] = lat
+    if "longitude" in btl_extras:
+        lon = btl_extras["longitude"].replace("\n", "")
+        lon = lon.split()
+        lon = " E".find(lon[2]) * float(lon[0]) + float(lon[1]) / 60
+        btl_extras["longitude"] = lon
+    # Add station and other extra columns
     btl["station"] = station
+    for k, v in btl_extras.items():
+        btl[k] = v
     # Put data columns into alphabetical order
     btl_columns = btl.columns.sort_values()
-    btl_starters = ["station", "bottle", "datetime", "datenum"]
+    btl_starters = ["station", "bottle", *btl_extras.keys(), "datetime", "datenum"]
     btl_columns = [*btl_starters, *btl_columns.drop(btl_starters)]
     btl = btl[btl_columns]
     return btl
