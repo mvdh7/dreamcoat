@@ -1,3 +1,4 @@
+import os
 import textwrap
 import pandas as pd
 import numpy as np
@@ -191,6 +192,37 @@ def read_btl(filename, station=None, **kwargs):
     btl_starters = ["station", "bottle", "datetime", "datenum"]
     btl_columns = [*btl_starters, *btl_columns.drop(btl_starters)]
     btl = btl[btl_columns]
+    return btl
+
+
+def read_btl_dir(btl_path, **kwargs):
+    """Import all btl files in a directory into a single dataframe.
+
+    Parameters
+    ----------
+    btl_path : str
+        The path of the directory containing btl files.
+    **kwargs
+        Additional kwargs to pass to read_btl_raw().
+
+    Returns
+    -------
+    pandas.DataFrame
+        The nicely formatted bottle files.
+    """
+    # Get list of bottle files
+    btl_files = os.listdir(btl_path)
+    btl_files = [f for f in btl_files if f.endswith(".btl")]
+    # Get corresponding station for each file
+    btl_files = {int(f.split("-")[1].split("CTD")[0]): f for f in btl_files}
+    btl_stations = list(btl_files.keys())
+    # Import the bottle files in ascending station order and concatenate into a single
+    # dataframe
+    btl_stations.sort()
+    btl = []
+    for station in btl_stations:
+        btl.append(read_btl(btl_path + btl_files[station], station=station, **kwargs))
+    btl = pd.concat(btl)
     return btl
 
 
