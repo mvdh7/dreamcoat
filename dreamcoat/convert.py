@@ -1,19 +1,41 @@
-import os, shutil
-import numpy as np, xarray as xr
+"""
+dreamcoat.convert
+=================
+Conversions between different units and formats.
+
+Functions
+---------
+extent_to_nsew
+    Get "N", "S", "E" and "W" from map extent values depending on their sign.
+knots_to_kph
+    Knots into kilometers per hour.
+kph_to_knots
+    Kilometers per hour into knots.
+nm_to_km
+    Nautical miles into kilometers.
+km_to_nm
+    Kilometers into nautical miles.
+cartesian_to_polar
+    Cartesian into polar coordinates.
+polar_to_cartesian
+    Polar into Cartesian coordinates.
+"""
+
+import numpy as np
 
 
 def extent_to_nsew(map_extent):
-    """Get N, S, E and W from map extent values depending on their sign.
+    """Get "N", "S", "E" and "W" from map extent values depending on their sign.
 
     Parameters
     ----------
-    map_extent : list
-        [West, east, north, south] map extents in decimal degrees.
+    map_extent : list of float
+        [west, east, north, south] map extents in decimal degrees.
 
     Returns
     -------
-    list
-        [E/W, E/W, N/S, N/S] as appropriate for the given extents.
+    list of str
+        ["E"/"W", "E"/"W", "N"/"S", "N"/"S"] as appropriate for the given extents.
     """
     nsew = [
         " EW"[int(np.sign(map_extent[0]))],
@@ -132,37 +154,3 @@ def polar_to_cartesian(theta, rho):
     x = rho * np.cos(theta)
     y = rho * np.sin(theta)
     return x, y
-
-
-def dd_to_ddm(dd):
-    """Convert decimal degrees into degrees decimal minutes.
-
-    Parameters
-    ----------
-    dd : float
-        (longitude, latitude) in decimal degrees.
-
-    Returns
-    -------
-    str
-        The position(s) in degrees decimal minutes.
-    """
-    single = dd.ndim == 1
-    if single:
-        dd = [dd]
-    ddm = []
-    for d in dd:
-        lon, lat = d
-        ddm.append(
-            "{:02.0f}°{:04.1f}'{}, {:03.0f}°{:04.1f}'{}".format(
-                np.floor(np.abs(lat)),
-                60 * (np.abs(lat) % 1),
-                "SN"[int(lat > 0)],
-                np.floor(np.abs(lon)),
-                60 * (np.abs(lon) % 1),
-                "WE"[int(lon > 0)],
-            )
-        )
-    if single:
-        ddm = ddm[0]
-    return ddm
