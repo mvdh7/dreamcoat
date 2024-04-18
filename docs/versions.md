@@ -6,6 +6,8 @@ To find out what version you're using, run `dreamcoat.hello()`.
 
 > In development for RV *Pelagia* cruises 64PE533 and 64PE534 in April-May 2024.
 
+Simplifies the package to remove messy dependencies and focus on core cruise data processing capabilities.  Removes CMEMS, MODIS and emailing tools.
+
 ## <span style='color:#ffff14; font-weight: 500; text-shadow: -1px 1px 0 #ceb301aa, 1px 1px 0 #ceb301aa, 1px -1px 0 #ceb301aa, -1px -1px 0 #ceb301aa;'>Yellow</span> (0.2)
 
 > Developed for RV *Pelagia* cruise 64PE517 (26<sup>th</sup> May to 14<sup>th</sup> June 2023) in the North Sea, a round trip from Texel, the Netherlands to the Norwegian Trench as part of the NoSE research project.

@@ -1,3 +1,24 @@
+"""
+dreamcoat.ctd
+=============
+Read and process CTD data (specifically, from RV Pelagia).
+
+Functions
+---------
+read_bl
+    Read the bottle numbers and datetime from a bl file from the CTD.
+read_btl
+    Import a btl file and parse it into a usable format.
+read_btl_dir
+    Import all btl files in a directory and parse them into a usable format.
+read_btl_raw
+    Import a btl file from the CTD with minimal processing.
+read_cnv_1Hz
+    Read the contents of a 1 Hz cnv file from a CTD cast.
+read_ctd_bl_create_btl
+    Create a new "btl file" from the 1 Hz data file with a selected averaging period.
+"""
+
 import os
 import textwrap
 import pandas as pd
@@ -251,12 +272,12 @@ def read_btl_dir(btl_path, **kwargs):
 
 
 def read_bl(filename_bl):
-    """Read the bottle numbers and datetime from a .bl file from the CTD.
+    """Read the bottle numbers and datetime from a bl file from the CTD.
 
     Parameters
     ----------
     filename_bl : str
-        The filename (and path) for the .bl file.
+        The filename (and path) for the bl file.
 
     Returns
     -------
@@ -279,40 +300,29 @@ def read_bl(filename_bl):
     return bl
 
 
-def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl):
+def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
+    """Create a new "btl file" by averaging data in the 1 Hz data file over a certain
+    period before each bottle was fired.
+
+    Parameters
+    ----------
+    filename_cnv_1Hz : str
+        The filename (and path) for the 1 Hz cnv file.
+    filename_bl : str
+        The filename (and path) for the bl file.
+
+    Returns
+    -------
+    pd.DataFrame
+        The new "btl file" with all variables averaged over the specified period before
+        each bottle firing moment.
+    """
     ctd = read_cnv_1Hz(filename_cnv_1Hz)
     bl = read_bl(filename_bl)
     # Make new btl table
     btl = bl.set_index("bottle")
-    # Add data from 30 seconds before firing for each sensor
-    time_before_firing = pd.Timedelta("30s")
-    for c in ctd.columns:
-        if c not in btl:
-            btl[c] = np.nan
-            btl[c + "_std"] = np.nan
-            btl[c + "_flag"] = np.nan
-    ctd["bottle"] = 0
-    for i, row in btl.iterrows():
-        L = (ctd.datetime > row.datetime - time_before_firing) & (
-            ctd.datetime <= row.datetime
-        )
-        ctd.loc[L, "bottle"] = i
-        for c in ctd.columns:
-            if c not in ["bottle", "datetime", "datenum"]:
-                btl.loc[i, c] = ctd.loc[L, c].mean()
-                btl.loc[i, c + "_std"] = ctd.loc[L, c].std()
-    return ctd, btl
-
-
-def read_ctd_create_btl(filename_cnv_1Hz, filename_btl_raw):
-    ctd = read_cnv_1Hz(filename_cnv_1Hz)
-    btl_raw = read_btl_raw(filename_btl_raw)
-    # Make new btl table
-    btl = btl_raw[~btl_raw.bottle.isnull()][
-        ["bottle", "datetime", "datenum"]
-    ].set_index("bottle")
-    # Add data from 30 seconds before firing for each sensor
-    time_before_firing = pd.Timedelta("30s")
+    # Add data from specified period before firing for each sensor
+    time_before_firing = pd.Timedelta(period)
     for c in ctd.columns:
         if c not in btl:
             btl[c] = np.nan

@@ -9,25 +9,14 @@ name = "dreamcoat"
 description = "The joyful oceanographic seagoing expedition planning helper"
 readme = "README.md"
 dependencies = [
-    "calkulate",
-    "cartopy",
     "fsspec",
     "geographiclib",
     "great_circle_calculator",
-    "gsw",
-    "keyring",
-    "koolstof",
     "matplotlib",
-    "motuclient",
-    "napari",
-    "netcdf4",
     "numpy",
     "scipy",
     "shapely",
     "vptree",
-    "xarray",
-    "yagmail",
-    "zarr",
 ]
 dynamic = ["version"]
 
