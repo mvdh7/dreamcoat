@@ -114,11 +114,33 @@ class LatLon:
         self.latitude_dm = 60 * (np.abs(self.latitude_dd) - self.latitude_r)
         self.latitude_dir = "NNS"[np.sign(self.latitude_dd).astype(int)]
 
-    def to_dd(self):
-        """Return (longitude, latitude) in decimal degrees)."""
-        return self.longitude_dd, self.latitude_dd
+    def to_dd(self, lon_first=True):
+        """Return (longitude, latitude) in decimal degrees.
 
-    def __repr__(self):
+        Parameters
+        ----------
+        lon_first : bool, optional
+            Whether to lead with longitude (True) or latitude (False), by default True.
+
+        Returns
+        -------
+        tuple of float
+            The (longitude, latitude) value in decimal degrees, with E and N positive
+            (or (latitude, longitude) if not lon_first).
+        """
+        if lon_first:
+            return self.longitude_dd, self.latitude_dd
+        else:
+            return self.latitude_dd, self.longitude_dd
+
+    def to_ddm(self):
+        """Return latitude and longitude in degrees decimal minutes.
+
+        Returns
+        -------
+        str
+            A nicely formatted string of the latitude and longitude values.
+        """
         return "{:02.0f}°{:06.3f}'{}, {:03.0f}°{:06.3f}'{}".format(
             self.latitude_r,
             self.latitude_dm,
@@ -126,7 +148,12 @@ class LatLon:
             self.longitude_r,
             self.longitude_dm,
             self.longitude_dir,
-        ) + " ({:.4f}, {:.4f})".format(self.longitude_dd, self.latitude_dd)
+        )
+
+    def __repr__(self):
+        return self.to_ddm() + " ({:.4f}, {:.4f})".format(
+            self.longitude_dd, self.latitude_dd
+        )
 
     def __add__(self, other):
         return LatLon(
