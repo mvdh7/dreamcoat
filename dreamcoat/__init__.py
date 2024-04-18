@@ -18,8 +18,8 @@ The docstring examples assume that `dreamcoat` has been imported as ``dc``:
 
   >>> import dreamcoat as dc
 
-Available subpackages
----------------------
+Modules
+-------
 convert
     Convert between different units and formats.
 ctd
@@ -30,17 +30,21 @@ meta
     Metadata for dreamcoat.
 plot
     Shortcuts for data visualisations.
+
+Classes
+-------
+LatLon
+    A tool to convert between decimal degrees and degrees decimal minutes.
+Route
+    A set of waypoints defining a route.
+
+Functions
+---------
+hello
+    Report the version number.
 """
 
 from . import convert, ctd, maps, meta, plot
-from .maps import (
-    Route,
-    get_route_distance,
-    linspace_gc,
-    linspace_gc_waypoints,
-    build_vptree,
-)
-from .maps.degrees_decimal_minutes import DegreesDecimalMinutes
-
-DDM = DegreesDecimalMinutes
+from .maps import Route
+from .maps.degrees_decimal_minutes import LatLon
 from .meta import __version__, hello
