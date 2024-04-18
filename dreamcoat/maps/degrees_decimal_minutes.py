@@ -70,6 +70,11 @@ class LatLon:
         The decimal minutes of the longitude.
     longitude_dir : str
         The direction of the longitude ("E" or "W").
+
+    Methods
+    -------
+    to_dd : tuple of float
+        Return (longitude, latitude) in decimal degrees.
     """
 
     def __init__(
@@ -108,6 +113,10 @@ class LatLon:
         self.latitude_r = int(np.floor(np.abs(self.latitude_dd)))
         self.latitude_dm = 60 * (np.abs(self.latitude_dd) - self.latitude_r)
         self.latitude_dir = "NNS"[np.sign(self.latitude_dd).astype(int)]
+
+    def to_dd(self):
+        """Return (longitude, latitude) in decimal degrees)."""
+        return self.longitude_dd, self.latitude_dd
 
     def __repr__(self):
         return "{:02.0f}°{:06.3f}'{}, {:03.0f}°{:06.3f}'{}".format(
