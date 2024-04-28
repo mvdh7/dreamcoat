@@ -256,6 +256,8 @@ def read_btl_dir(btl_path, **kwargs):
         The nicely formatted bottle files.
     """
     # Get list of bottle files
+    if not btl_path.endswith(os.sep):
+        btl_path += os.sep
     btl_files = os.listdir(btl_path)
     btl_files = [f for f in btl_files if f.endswith(".btl")]
     # Get corresponding station for each file
