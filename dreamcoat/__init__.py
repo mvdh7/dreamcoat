@@ -30,6 +30,8 @@ meta
     Metadata for dreamcoat.
 plot
     Shortcuts for data visualisations.
+underway
+    Working with underway data files.
 
 Classes
 -------
@@ -44,7 +46,7 @@ hello
     Report the version number.
 """
 
-from . import convert, ctd, maps, meta, plot
+from . import convert, ctd, maps, meta, plot, underway
 from .maps import Route
 from .maps.degrees_decimal_minutes import LatLon
 from .meta import __version__, hello
