@@ -24,6 +24,8 @@ convert
     Convert between different units and formats.
 ctd
     Dealing with CTD data files.
+glider
+    Working with Slocum gliders.
 maps
     Working with data in (longitude, latitude) space.
 meta
@@ -46,7 +48,7 @@ hello
     Report the version number.
 """
 
-from . import convert, ctd, maps, meta, plot, underway
+from . import convert, ctd, glider, maps, meta, plot, underway
 from .maps import Route
 from .maps.degrees_decimal_minutes import LatLon
 from .meta import __version__, hello
