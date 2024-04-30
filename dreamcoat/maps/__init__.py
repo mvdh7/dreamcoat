@@ -486,7 +486,7 @@ class Route:
         self.size = waypoints.shape[1]
         self.distance_method = distance_method
         self.distance = get_route_distance(waypoints, method=distance_method)
-        self.build_vpt(distance_method=distance_method)
+        self.build_vpt()
 
     def build_vpt(self):
         """Create a vantage-point tree that can be used to find nearest neighbours."""
