@@ -24,6 +24,7 @@ import textwrap
 import pandas as pd
 import numpy as np
 from matplotlib import dates as mdates
+from . import plot
 
 ctd_renamer = {
     "scan": "scan",
@@ -341,3 +342,56 @@ def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
                 btl.loc[i, c] = ctd.loc[L, c].mean()
                 btl.loc[i, c + "_std"] = ctd.loc[L, c].std()
     return ctd, btl
+
+
+def get_deep(btl, cluster_vars=None):
+    deep = {
+        "station": [],
+        "depth": [],
+        "depth_std": [],
+        "depth_count": [],
+        "longitude": [],
+        "latitude": [],
+    }
+    if cluster_vars is None:
+        cluster_vars = list(btl.columns)
+        if "bottle" in cluster_vars:
+            cluster_vars.remove("bottle")
+    for k in deep:
+        if k in cluster_vars:
+            cluster_vars.remove(k)
+    for i, k in enumerate(cluster_vars):
+        if np.isin(btl[k].dtype, [float, int]):
+            deep[k] = []
+            deep[k + "_std"] = []
+            deep[k + "_count"] = []
+        else:
+            cluster_vars[i] = "__REMOVE__"
+            print('Could not cluster column "{}".'.format(k))
+    while "__REMOVE__" in cluster_vars:
+        cluster_vars.remove("__REMOVE__")
+    btl_stations = btl.station.unique()
+    for s in btl_stations:
+        L = btl.station == s
+        cl = plot.get_clusters(
+            btl[L].depth.to_numpy(), btl[L][["depth", *cluster_vars]].to_numpy(), 1.2
+        )
+        deep["station"].append(np.full(cl.x.size, s))
+        for v in ["longitude", "latitude"]:
+            deep[v].append(np.full(cl.x.size, btl[v][L].mean()))
+        deep["depth"].append(cl.x)
+        deep["depth_std"].append(cl.std[:, 0])
+        deep["depth_count"].append(cl.count[:, 0])
+        for i, k in enumerate(cluster_vars):
+            deep[k].append(cl.Y[:, i + 1])
+            deep[k + "_std"].append(cl.std[:, i + 1])
+            deep[k + "_count"].append(cl.count[:, i + 1])
+    deep = pd.DataFrame({k: np.concatenate(v) for k, v in deep.items()})
+    deep["datetime"] = mdates.num2date(deep.datenum)
+    deep["station_depth"] = (
+        deep.station.astype(int).astype(str)
+        + "-"
+        + np.round(deep.depth).astype(int).astype(str)
+    )
+    deep = deep.set_index("station_depth")
+    return deep
