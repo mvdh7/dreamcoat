@@ -84,11 +84,11 @@ class LatLon:
     ):
         # Get values in decimal degrees
         if isinstance(longitude, str):
-            self.longitude_dd = to_lon_dd(longitude)
+            self.longitude_dd = to_lon_dd(longitude.replace(" ", ""))
         elif isinstance(longitude, float) or isinstance(longitude, int):
             self.longitude_dd = longitude
         if isinstance(latitude, str):
-            self.latitude_dd = to_lat_dd(latitude)
+            self.latitude_dd = to_lat_dd(latitude.replace(" ", ""))
         elif isinstance(latitude, float) or isinstance(latitude, int):
             self.latitude_dd = latitude
         # Adjust numbers to stay within valid ranges
