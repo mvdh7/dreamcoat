@@ -48,7 +48,7 @@ hello
     Report the version number.
 """
 
-from . import convert, ctd, glider, maps, meta, plot, underway
+from . import convert, ctd, glider, maps, meta, plot, stats, underway
 from .maps import Route
 from .maps.degrees_decimal_minutes import LatLon
 from .meta import __version__, hello
