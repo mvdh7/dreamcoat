@@ -346,7 +346,7 @@ def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
     return ctd, btl
 
 
-def get_deep(btl, cluster_bandwidth=1, cluster_vars=None):
+def get_deep(btl, cluster_bandwidth=1, cluster_vars=None, verbose=True):
     """Create one-per-depth table from btl.
 
     Parameters
@@ -358,6 +358,8 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None):
     cluster_vars : list, optional
         Which variables to compute clusters for, by default None, in which case, all
         possible columns in btl are used.
+    verbose : bool, optional
+        Whether to report on columns that cannot be clustered, by default True.
 
     Returns
     -------
@@ -386,7 +388,8 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None):
             deep[k + "_count"] = []
         else:
             cluster_vars[i] = "__REMOVE__"
-            print('Could not cluster column "{}".'.format(k))
+            if verbose:
+                print('dc.ctd.get_deep(): Could not cluster column "{}".'.format(k))
     while "__REMOVE__" in cluster_vars:
         cluster_vars.remove("__REMOVE__")
     btl_stations = btl.station.unique()
