@@ -5,6 +5,8 @@ Read and process CTD data (specifically, from RV Pelagia).
 
 Functions
 ---------
+get_deep
+    Create one-per-depth table from btl.
 read_bl
     Read the bottle numbers and datetime from a bl file from the CTD.
 read_btl
@@ -344,7 +346,24 @@ def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
     return ctd, btl
 
 
-def get_deep(btl, cluster_vars=None):
+def get_deep(btl, cluster_bandwidth=1, cluster_vars=None):
+    """Create one-per-depth table from btl.
+
+    Parameters
+    ----------
+    btl : pd.DataFrame
+        The bottle file, e.g. as imported with read_btl_dir.
+    cluster_bandwidth : float, optional
+        The cluster bandwidth in m, by default 1.
+    cluster_vars : list, optional
+        Which variables to compute clusters for, by default None, in which case, all
+        possible columns in btl are used.
+
+    Returns
+    -------
+    pd.DataFrame
+        A table with one row per nominal bottle firing depth.
+    """
     deep = {
         "station": [],
         "depth": [],
@@ -374,7 +393,9 @@ def get_deep(btl, cluster_vars=None):
     for s in btl_stations:
         L = btl.station == s
         cl = plot.get_clusters(
-            btl[L].depth.to_numpy(), btl[L][["depth", *cluster_vars]].to_numpy(), 1.2
+            btl[L].depth.to_numpy(),
+            btl[L][["depth", *cluster_vars]].to_numpy(),
+            cluster_bandwidth,
         )
         deep["station"].append(np.full(cl.x.size, s))
         for v in ["longitude", "latitude"]:
