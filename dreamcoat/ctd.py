@@ -401,11 +401,11 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None):
         for v in ["longitude", "latitude"]:
             deep[v].append(np.full(cl.x.size, btl[v][L].mean()))
         deep["depth"].append(cl.x)
-        deep["depth_std"].append(cl.std[:, 0])
+        deep["depth_std"].append(cl.std_unbiased[:, 0])
         deep["depth_count"].append(cl.count[:, 0])
         for i, k in enumerate(cluster_vars):
             deep[k].append(cl.Y[:, i + 1])
-            deep[k + "_std"].append(cl.std[:, i + 1])
+            deep[k + "_std"].append(cl.std_unbiased[:, i + 1])
             deep[k + "_count"].append(cl.count[:, i + 1])
     deep = pd.DataFrame({k: np.concatenate(v) for k, v in deep.items()})
     deep["datetime"] = mdates.num2date(deep.datenum)

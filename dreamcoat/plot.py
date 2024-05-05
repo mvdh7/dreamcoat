@@ -1,11 +1,12 @@
 from collections import namedtuple
+import warnings
 from matplotlib import pyplot as plt  # , patheffects as pe
 import numpy as np
 from scipy import interpolate
 from sklearn import cluster
-from . import meta
+from . import meta, stats
 
-Clustered = namedtuple("Clustered", ("x", "Y", "std", "count", "label"))
+Clustered = namedtuple("Clustered", ("x", "Y", "std", "std_unbiased", "count", "label"))
 
 
 def add_credit(ax):
@@ -66,14 +67,22 @@ def get_clusters(x, Y, cluster_bandwidth):
     try:
         cY = np.full((cx.size, Y.shape[1]), np.nan)
         cY_std = np.full((cx.size, Y.shape[1]), np.nan)
+        cY_std_unbiased = np.full((cx.size, Y.shape[1]), np.nan)
         cY_count = np.full((cx.size, Y.shape[1]), np.nan)
     except IndexError:
         cY = np.full(cx.size, np.nan)
         cY_std = np.full(cx.size, np.nan)
+        cY_std_unbiased = np.full(cx.size, np.nan)
         cY_count = np.full(cx.size, 0)
     for i in range(cx.size):
-        cY[i] = np.nanmean(Y[cn == i], axis=0)
-        cY_std[i] = np.nanstd(Y[cn == i], axis=0)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", message="Degrees of freedom <= 0 for slice."
+            )
+            warnings.filterwarnings("ignore", message="Mean of empty slice")
+            cY[i] = np.nanmean(Y[cn == i], axis=0)
+            cY_std[i] = np.nanstd(Y[cn == i], axis=0)
+        cY_std_unbiased[i] = stats.std_unbiased(Y[cn == i], axis=0)
         try:
             cY_count[i] = np.sum(np.vstack(cn == i) & ~np.isnan(Y), axis=0)
         except ValueError:
@@ -83,13 +92,9 @@ def get_clusters(x, Y, cluster_bandwidth):
     cx = cx[ci]
     cY = cY[ci]
     cY_std = cY_std[ci]
+    cY_std_unbiased = cY_std_unbiased[ci]
     cY_count = cY_count[ci]
-    return Clustered(cx, cY, cY_std, cY_count, cn)
-    # return cx, cY, cY_std, cY_count, cn
-
-
-# def get_deep(df):
-# df[]
+    return Clustered(cx, cY, cY_std, cY_std_unbiased, cY_count, cn)
 
 
 def get_cluster_profile(x, y, cluster_bandwidth=5, linspace_num=100):
