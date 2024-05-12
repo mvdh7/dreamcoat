@@ -210,7 +210,36 @@ def get_distance(lon_lat_1, lon_lat_2, method="gcc"):
     float
         Distance between the two points in km.
     """
+    if isinstance(lon_lat_1, degrees_decimal_minutes.LatLon):
+        lon_lat_1 = (lon_lat_1.longitude_dd, lon_lat_1.latitude_dd)
+    if isinstance(lon_lat_2, degrees_decimal_minutes.LatLon):
+        lon_lat_2 = (lon_lat_2.longitude_dd, lon_lat_2.latitude_dd)
     return _get_distance_func(method)(lon_lat_1, lon_lat_2)
+
+
+def get_heading(lon_lat_1, lon_lat_2):
+    """Calculate heading from lon_lat_1 to lon_lat_2.
+
+    Parameters
+    ----------
+    lon_lat_1 : array_like
+        (longitude, latitude) of the first point in decimal degrees.
+    lon_lat_2 : array_like
+        (longitude, latitude) of the second point in decimal degrees.
+
+    Returns
+    -------
+    float
+        Heading in ° (with N as 0, E as 90, ...).
+    """
+    if isinstance(lon_lat_1, degrees_decimal_minutes.LatLon):
+        lon_lat_1 = (lon_lat_1.longitude_dd, lon_lat_1.latitude_dd)
+    if isinstance(lon_lat_2, degrees_decimal_minutes.LatLon):
+        lon_lat_2 = (lon_lat_2.longitude_dd, lon_lat_2.latitude_dd)
+    heading = gcc.bearing_at_p1(lon_lat_1, lon_lat_2)
+    if heading < 0:
+        heading += 360
+    return heading
 
 
 def get_route_distance(waypoints, method="gcc"):
@@ -538,7 +567,7 @@ class Route:
                 The index of the nearest waypoint.
         """
         return map_point_to_route(
-            route, lon_lat, extrapolate=extrapolate, verbose=verbose
+            self, lon_lat, extrapolate=extrapolate, verbose=verbose
         )
 
     def interp(self, num_approx=100, endpoint=True):
