@@ -21,7 +21,7 @@ def std_bias_correction(sample_size):
         this c4 value to find the unbiased estimate.
     """
     k = np.floor(sample_size / 2)
-    with np.errstate(divide="ignore"):
+    with np.errstate(divide="ignore", invalid="ignore"):
         c4 = np.where(
             sample_size % 2 == 0,
             # For even sample_size:
