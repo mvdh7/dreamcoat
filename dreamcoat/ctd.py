@@ -58,7 +58,7 @@ ctd_renamer = {
 ctd_Renamer = {k[0].upper() + k[1:]: v for k, v in ctd_renamer.items()}
 
 
-def read_cnv_1Hz(filename):
+def read_cnv_1Hz(filename, station=None):
     """Read the contents of a 1 Hz cnv file from a CTD cast.
 
     Parameters
@@ -119,6 +119,7 @@ def read_cnv_1Hz(filename):
         .rename(columns=ctd_renamer)
     )
     # Add positional information to the dataframe
+    ctd_Hz["station"] = int(station)
     ctd_Hz["datetime"] = start_time + np.arange(0, ctd_Hz.shape[0]).astype(
         "timedelta64[s]"
     )
