@@ -129,7 +129,7 @@ def cartesian_to_polar(x, y):
         Radius in polar co-ordinates.
     """
     rho = np.sqrt(x**2 + y**2)
-    theta = np.arctan2(y, -x) - np.pi / 2
+    theta = np.arctan2(y, x)
     return theta, rho
 
 
@@ -154,3 +154,91 @@ def polar_to_cartesian(theta, rho):
     x = rho * np.cos(theta)
     y = rho * np.sin(theta)
     return x, y
+
+
+def spherical_to_cartesian(azimuth, elevation, r):
+    """Convert from spherical to Cartesian co-ordinates, following MATLAB's sph2cart.
+
+    Parameters
+    ----------
+    azimuth : float
+        The azimuth in degrees.
+    elevation : float
+        The elevation in degrees.
+    r : float
+        The radius.
+
+    Returns
+    -------
+    x, y, z : floats
+        Cartesian coordinates in the x, y and z dimensions.
+    """
+    x = r * np.cos(elevation) * np.cos(azimuth)
+    y = r * np.cos(elevation) * np.sin(azimuth)
+    z = r * np.sin(elevation)
+    return x, y, z
+
+
+def cartesian_to_spherical(x, y, z):
+    """Convert from Cartesian to spherical co-ordinates, following MATLAB's cart2sph.
+
+    Parameters
+    ----------
+    x, y, z : floats
+        Cartesian coordinates in the x, y and z dimensions.
+
+    Returns
+    -------
+    azimuth : float
+        The azimuth in degrees.
+    elevation : float
+        The elevation in degrees.
+    r : float
+        The radius.
+    """
+    azimuth = np.arctan2(y, x)
+    elevation = np.arctan2(z, np.hypot(x, y))
+    r = np.sqrt(x**2 + y**2 + z**2)
+    return azimuth, elevation, r
+
+
+def llh_to_s(
+    longitude,
+    latitude,
+    height,
+    central_latitude=90,
+    central_longitude=0,
+    radius_sphere=6371,
+    scale_vertical=1,
+):
+    azimuth = np.deg2rad(longitude - central_longitude)
+    elevation = np.deg2rad(latitude)
+    radius = radius_sphere + scale_vertical * height / 1000
+    sx, sy, sz = spherical_to_cartesian(azimuth, elevation, radius)
+    stheta, srho = cartesian_to_polar(sx, sz)
+    rot = (90 - central_latitude) * np.pi / 180
+    stheta += rot
+    sx, sz = polar_to_cartesian(stheta, srho)
+    sx, sy = sy, -sx
+    return sx, sy, sz
+
+
+def s_to_llh(
+    sx,
+    sy,
+    sz,
+    central_latitude=90,
+    central_longitude=0,
+    radius_sphere=6371,
+    scale_vertical=1,
+):
+    sx, sy = -sy, sx
+    stheta, srho = cartesian_to_polar(sx, sz)
+    rot_ = (90 - central_latitude) * np.pi / 180
+    stheta -= rot_
+    sx, sz = polar_to_cartesian(stheta, srho)
+    azimuth_, elevation_, radius_ = cartesian_to_spherical(sx, sy, sz)
+    longitude = np.rad2deg(azimuth_) + central_longitude
+    latitude = np.rad2deg(elevation_)
+    height = (radius_ - 6371) * 1000 / scale_vertical
+    return longitude, latitude, height
