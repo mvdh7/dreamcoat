@@ -14,6 +14,7 @@ dependencies = [
     "great_circle_calculator",
     "matplotlib",
     "numpy",
+    "scikit-learn",
     "scipy",
     "shapely",
     "vptree",
