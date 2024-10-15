@@ -1,5 +1,5 @@
 import numpy as np
-import vptree
+from dreamcoat.maps import vptree
 import dreamcoat as dc
 
 

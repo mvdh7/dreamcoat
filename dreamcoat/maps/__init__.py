@@ -32,7 +32,7 @@ import itertools
 from collections import namedtuple
 import numpy as np
 from geographiclib.geodesic import Geodesic
-import great_circle_calculator.great_circle_calculator as gcc
+from .. import gcc
 from .vptree import VPTree
 import cartopy.io.shapereader as shpreader
 from shapely import geometry

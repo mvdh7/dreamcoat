@@ -1,5 +1,5 @@
-from great_circle_calculator._constants import *
-from great_circle_calculator.__error_checking import _error_check_point
+from ._constants import *
+from .__error_checking import _error_check_point
 
 
 def _degrees_to_radians(degrees):
