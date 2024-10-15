@@ -11,13 +11,11 @@ readme = "README.md"
 dependencies = [
     "fsspec",
     "geographiclib",
-    "great_circle_calculator",
     "matplotlib",
     "numpy",
     "scikit-learn",
     "scipy",
     "shapely",
-    "vptree",
 ]
 dynamic = ["version"]
 

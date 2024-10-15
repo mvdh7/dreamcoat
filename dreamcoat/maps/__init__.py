@@ -33,7 +33,7 @@ from collections import namedtuple
 import numpy as np
 from geographiclib.geodesic import Geodesic
 import great_circle_calculator.great_circle_calculator as gcc
-from vptree import VPTree
+from .vptree import VPTree
 import cartopy.io.shapereader as shpreader
 from shapely import geometry
 from . import degrees_decimal_minutes

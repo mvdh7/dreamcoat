@@ -24,6 +24,8 @@ convert
     Convert between different units and formats.
 ctd
     Dealing with CTD data files.
+gcc
+    The great_circle_calculator package.
 glider
     Working with Slocum gliders.
 maps
@@ -49,6 +51,7 @@ hello
 """
 
 from . import convert, ctd, glider, maps, meta, plot, stats, underway
+from .great_circle_calculator import great_circle_calculator as gcc
 from .maps import Route
 from .maps.degrees_decimal_minutes import LatLon
 from .meta import __version__, hello
