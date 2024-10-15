@@ -1,25 +1,6 @@
 [build-system]
 requires = [
     "setuptools", 
-    "calkulate",
-    "cartopy",
-    "fsspec",
-    "geographiclib",
-    "great_circle_calculator",
-    "gsw",
-    "keyring",
-    "koolstof",
-    "matplotlib",
-    "motuclient",
-    "napari",
-    "netcdf4",
-    "numpy",
-    "scipy",
-    "shapely",
-    "vptree",
-    "xarray",
-    "yagmail",
-    "zarr",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -28,25 +9,15 @@ name = "dreamcoat"
 description = "The joyful oceanographic seagoing expedition planning helper"
 readme = "README.md"
 dependencies = [
-    "calkulate",
-    "cartopy",
     "fsspec",
     "geographiclib",
     "great_circle_calculator",
-    "gsw",
-    "keyring",
-    "koolstof",
     "matplotlib",
-    "motuclient",
-    "napari",
-    "netcdf4",
     "numpy",
+    "scikit-learn",
     "scipy",
     "shapely",
     "vptree",
-    "xarray",
-    "yagmail",
-    "zarr",
 ]
 dynamic = ["version"]
 

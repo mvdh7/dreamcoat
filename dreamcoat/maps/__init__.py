@@ -1,9 +1,20 @@
-"""dreamcoat.maps
-=================
-A set of tools for helping with geographic mapping and routing.
+"""
+dreamcoat.maps
+==============
+Geographic mapping and route planning.
 
 Functions
 ---------
+build_vptree
+    Build vantage-point tree for Natural Earth Data coastline.
+get_distance
+    Calculate distance between a pair of points.
+get_distance_gcc
+    Calculate distance between a pair of points in km using great_circle_calculator.
+get_distance_geodesic
+    Calculate geodesic distance between a single pair of points in km.
+get_route_distance
+    Calculate distance from point to point along a route.
 linspace_gc
     Return evenly spaced points along a great circle.
 linspace_gc_waypoints
@@ -11,18 +22,10 @@ linspace_gc_waypoints
 linspace_gc_waypoints_cs
     Apply `linspace_gc` across a series of waypoints, with a constant number of points
     between each pair.
-get_distance_geodesic
-    Calculate geodesic distance between a single pair of points in km.
-get_distance_gcc
-    Calculate distance between a pair of points in km using great_circle_calculator.
-get_distance
-    Calculate distance between a pair of points.
-get_route_distance
-    Calculate distance from point to point along a route.
-map_point_to_section
-    Find the closest point on a single line section to a given point.
 map_point_to_route
     Find the closest point on a route to a new point.
+map_point_to_section
+    Find the closest point on a single line section to a given point.
 """
 
 import itertools
@@ -189,8 +192,10 @@ def _get_distance_func(method):
 
 
 def get_distance(lon_lat_1, lon_lat_2, method="gcc"):
-    """Calculate distance between a pair of points in km using either great_circle_calculator.
-    (default) or geographiclib (more accurate but ~50 times slower).
+    """Calculate distance between a pair of points in km using either
+    great_circle_calculator (default) or geographiclib (more accurate but ~50 times
+    slower).
+
     Parameters
     ----------
     lon_lat_1 : array_like
@@ -205,7 +210,36 @@ def get_distance(lon_lat_1, lon_lat_2, method="gcc"):
     float
         Distance between the two points in km.
     """
+    if isinstance(lon_lat_1, degrees_decimal_minutes.LatLon):
+        lon_lat_1 = (lon_lat_1.longitude_dd, lon_lat_1.latitude_dd)
+    if isinstance(lon_lat_2, degrees_decimal_minutes.LatLon):
+        lon_lat_2 = (lon_lat_2.longitude_dd, lon_lat_2.latitude_dd)
     return _get_distance_func(method)(lon_lat_1, lon_lat_2)
+
+
+def get_heading(lon_lat_1, lon_lat_2):
+    """Calculate heading from lon_lat_1 to lon_lat_2.
+
+    Parameters
+    ----------
+    lon_lat_1 : array_like
+        (longitude, latitude) of the first point in decimal degrees.
+    lon_lat_2 : array_like
+        (longitude, latitude) of the second point in decimal degrees.
+
+    Returns
+    -------
+    float
+        Heading in ° (with N as 0, E as 90, ...).
+    """
+    if isinstance(lon_lat_1, degrees_decimal_minutes.LatLon):
+        lon_lat_1 = (lon_lat_1.longitude_dd, lon_lat_1.latitude_dd)
+    if isinstance(lon_lat_2, degrees_decimal_minutes.LatLon):
+        lon_lat_2 = (lon_lat_2.longitude_dd, lon_lat_2.latitude_dd)
+    heading = gcc.bearing_at_p1(lon_lat_1, lon_lat_2)
+    if heading < 0:
+        heading += 360
+    return heading
 
 
 def get_route_distance(waypoints, method="gcc"):
@@ -213,8 +247,8 @@ def get_route_distance(waypoints, method="gcc"):
 
     Parameters
     ----------
-    waypoints : (array_like, array_like)
-        The route (longitude, latitude) waypoints.
+    waypoints : array_like
+        The route (longitude, latitude) waypoints as a size (2, n) np.array.
     method : str, optional
         Which method to use: 'gcc' (default) or 'geodesic'.
 
@@ -296,8 +330,8 @@ def map_point_to_route(route, lon_lat, extrapolate=False, verbose=False):
 
     Parameters
     ----------
-    route : array_like
-        (longitude, latitude) of the route waypoints.
+    route : Route
+        A Route object containing the route's waypoints.
     lon_lat : array_like
         (longitude, latitude) of the new off-route point.
     extrapolate : bool, optional
@@ -415,7 +449,55 @@ def map_point_to_route(route, lon_lat, extrapolate=False, verbose=False):
 
 
 class Route:
-    """ """
+    """A set of waypoints defining a route, which is assumed to travel in straight lines
+    (i.e., along great circles) between the waypoints.
+
+    Parameters
+    ----------
+    waypoints : np.ndarray
+        A (2, n) NumPy array of the (longitude, latitude) values of the waypoints.
+    distance_method : str, optional
+        Which method is used to calculate distances, either
+          "gcc" (default) - uses great_circle_calculator
+          "geodesic" - uses geographiclib.geodesic.Geodesic.WGS84
+        The first is an order of magnitude faster but a bit less accurate.
+
+    Attributes
+    ----------
+    waypoints : np.ndarray
+        The (2, n) NumPy array of the (longitude, latitude) values of the waypoints.
+    size : int
+        The number of waypoints (i.e., n).
+    distance_method : str
+        The method being used to calculate distances ("gcc" or "geodesic").
+    distance : np.ndarray
+        The distance of each waypoint along the route in km.
+    vpt : vptree.VPTree
+        A vantage-point tree for the route.
+    wp_interp : np.ndarray
+        A (2, n) NumPy array of the (longitude, latitude) values of a higher-resolution
+        set of points interpolated between the waypoints.  Appears after running the
+        interp method.
+    wp_distance : np.ndarray
+        The distance of each interpolated point in wp_interp along the route in km.
+        Appears after running the interp method.
+
+    Methods
+    -------
+    build_vpt
+        Create a vantage-point tree for the route.
+    find_nearest_waypoint
+        Find the index of the waypoint closest to a given new point.
+    get_distance
+        Find the distance along the route corresponding to the closest point on the
+        route to a new point.
+    get_lon_lat
+        Calculate the longitude and latitude of a given distance along the route.
+    interp
+        Interpolate the route to a higher resolution.
+    map_point_to_route
+        Find the closest point on the route to a new point.
+    """
 
     def __init__(self, waypoints, distance_method="gcc"):
         assert (
@@ -433,25 +515,77 @@ class Route:
         self.size = waypoints.shape[1]
         self.distance_method = distance_method
         self.distance = get_route_distance(waypoints, method=distance_method)
-        self.build_vpt(distance_method=distance_method)
+        self.build_vpt()
 
-    def build_vpt(self, distance_method="gcc"):
+    def build_vpt(self):
         """Create a vantage-point tree that can be used to find nearest neighbours."""
-        self.vpt = VPTree(self.waypoints.T, _get_distance_func(distance_method))
+        self.vpt = VPTree(self.waypoints.T, _get_distance_func(self.distance_method))
 
     def find_nearest_waypoint(self, lon_lat):
-        """Find the index of the waypoint closest to `lon_lat`."""
+        """Find the index of the waypoint closest to a new point.
+
+        Parameters
+        ----------
+        lon_lat : array-like
+            A two-element list or array containing the (longitude, latitude) of a new
+            point, not necessarily on the route.
+
+        Returns
+        -------
+        int
+            The index of the waypoint closest to the new point.
+        """
         nearest = self.vpt.get_nearest_neighbor(lon_lat)[1]
         return (
             (self.waypoints[0] == nearest[0]) & (self.waypoints[1] == nearest[1])
         ).argmax()
 
-    map_point_to_route = map_point_to_route
+    def map_point_to_route(self, lon_lat, extrapolate=False, verbose=False):
+        """Find the closest point on the route to a new point.
+
+        Parameters
+        ----------
+        lon_lat : array-like
+            (longitude, latitude) of the new off-route point.
+        extrapolate : bool, optional
+            Whether to extrapolate beyond the ends of the route, by default False.
+        verbose : bool, optional
+            Whether to report on progress, by default False.
+
+        Results
+        -------
+        namedtuple (RoutePoint) containing fields
+            distance_on_route : float
+                Distance along the route up to the mapping of `lon_lat` onto the route
+                in km.
+            lon_lat : (float, float)
+                (longitude, latitude) of the mapping of `lon_lat` onto the route in
+                decimal degrees.
+            in_route : bool
+                Whether the mapping of `lon_lat` falls within the route.
+            waypoint_nearest : int
+                The index of the nearest waypoint.
+        """
+        return map_point_to_route(
+            self, lon_lat, extrapolate=extrapolate, verbose=verbose
+        )
 
     def interp(self, num_approx=100, endpoint=True):
         """Interpolate the route to a higher resolution, with the interpolated route
         stored in the attribute `wp_interp` and corresponding route distances in
         `wp_distance`.
+
+        The interpolation runs such that the exact positions of the original waypoints
+        are still included and the interpolated points are distributed as evenly as
+        possible between the waypoints.
+
+        Parameters
+        ----------
+        num_approx : int, optional
+            Approximate total number of interpolated points, by default 100.
+        endpoint : bool, optional
+            Whether to include the very final waypoint in the interpolated set, by
+            default True.
         """
         self.wp_interp = linspace_gc_waypoints(
             self.waypoints, num_approx=num_approx, endpoint=endpoint
@@ -461,7 +595,20 @@ class Route:
         )
 
     def get_lon_lat(self, distance, extrapolate=False):
-        """Get the longitude and latitude of a given distance along the route."""
+        """Get the longitude and latitude of a given distance along the route.
+
+        Parameters
+        ----------
+        distance : float
+            A distance along the route in km.
+        extrapolate : bool, optional
+            Whether to extrapolate beyond the ends of the route, if necessary; by
+            default False.
+
+        array-like
+            (longitude, latitude) of the point along the route at the specified
+            distance.
+        """
         out_of_range = False
         if distance in self.distance:
             nearest = (self.distance == distance).argmax()
@@ -496,7 +643,22 @@ class Route:
         return lon_lat
 
     def get_distance(self, lon_lat, extrapolate=False, verbose=False):
-        """Get the route distance corresponding to a given longitude and latitude."""
+        """Get the route distance corresponding to a given longitude and latitude.
+
+        Parameters
+        ----------
+        lon_lat : array-like
+            (longitude, latitude) of the new off-route point.
+        extrapolate : bool, optional
+            Whether to extrapolate beyond the ends of the route, by default False.
+        verbose : bool, optional
+            Whether to report on progress, by default False.
+
+        Returns
+        -------
+        float
+            Distance along the route in km.
+        """
         rp = self.map_point_to_route(lon_lat, extrapolate=extrapolate, verbose=verbose)
         return rp.distance_on_route
 
@@ -536,7 +698,8 @@ def coastline_coords(lat_range, lon_range, resolution="10m"):
     lon_range : array_like
         (min, max) longitude in decimal degrees.
     resolution : str, optional
-        Natural Earth Data resolution, by default "10m".
+        Natural Earth Data resolution, by default "10m" (can also be "50m" or "110m";
+        default "10m" is the most detailed).
 
     Returns
     -------
