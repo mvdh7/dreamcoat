@@ -9,13 +9,12 @@ name = "dreamcoat"
 description = "The joyful oceanographic seagoing expedition planning helper"
 readme = "README.md"
 dependencies = [
-    "fsspec",
+    "cartopy",
     "geographiclib",
     "matplotlib",
     "numpy",
     "scikit-learn",
     "scipy",
-    "shapely",
 ]
 dynamic = ["version"]
 
