@@ -112,7 +112,6 @@ def read_cnv_1Hz(filename, station=None):
             encoding_errors="replace",
             names=names,
             skiprows=skiprows,
-            # delim_whitespace=True,
             sep=r"\s+",
         )
         .drop(columns=names_duplicate)
