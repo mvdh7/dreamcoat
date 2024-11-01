@@ -2,9 +2,13 @@
 
 To find out what version you're using, run `dreamcoat.hello()`.
 
+## <span style='color:#653700; font-weight: 1000'>Brown</span> (0.4)
+
+Incorporates dependencies [great_circle_calculator](https://github.com/seangrogan/great_circle_calculator) and [vptree](https://github.com/RickardSjogren/vptree) internally to allow adding dreamcoat to conda-forge.
+
 ## <span style='color:#15b01a; font-weight: 1000'>Green</span> (0.3)
 
-> In development for RV *Pelagia* cruises 64PE533 and 64PE534 in April-May 2024.
+> Developed for RV *Pelagia* cruises 64PE533 and 64PE534 in April-May 2024.
 
 Simplifies the package to remove messy dependencies and focus on core cruise data processing capabilities.  Removes CMEMS, MODIS and emailing tools.
 
