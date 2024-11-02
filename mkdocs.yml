@@ -12,7 +12,7 @@ nav:
 theme:
   name: material
   palette:
-    scheme: dreamcoat-green
+    scheme: dreamcoat-brown
   features:
     - navigation.instant
 

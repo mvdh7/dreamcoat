@@ -8,3 +8,8 @@
   --md-accent-fg-color: #15b01aaa;
   --md-typeset-a-color: #15b01a;
 }
+[data-md-color-scheme="dreamcoat-brown"] {
+  --md-primary-fg-color: #653700;
+  --md-accent-fg-color: #653700aa;
+  --md-typeset-a-color: #653700;
+}
