@@ -748,3 +748,50 @@ def build_vptree(lat_range, lon_range, **kwargs):
     """
     coords = coastline_coords(lat_range, lon_range, **kwargs)
     return VPTree(coords, geodesic_distance)
+
+
+def extend_route(route_lon, route_lat, extra_fraction=0.05):
+    """Add extra points at the start and end of a route.
+
+    Parameters
+    ----------
+    route_lon : (n,) array-like
+        The longitude points for the route in decimal degrees.
+    route_lat : (n,) array-like
+        The latitude points for the route in decimal degrees.
+    extra_fraction : float, optional
+        What fraction of the total route distance to extend by, by default 0.05.
+
+    Returns
+    -------
+    route_lon_ext : (n + 2,) array-like
+        The longitude points for the extended route in decimal degrees.
+    route_lat_ext : (n + 2,) array-like
+        The latitude points for the extended route in decimal degrees.
+    route_distance_ext : (n + 2,) array-like
+        The distances along the extended route in km from the first point of the
+        original, unextended route.
+    """
+    route_distance = get_route_distance(np.array([route_lon, route_lat]))
+    total_distance = route_distance[-1]
+    bearing_start = gcc.bearing_at_p1(
+        (route_lon[1], route_lat[1]), (route_lon[0], route_lat[0])
+    )
+    bearing_end = gcc.bearing_at_p1(
+        (route_lon[-2], route_lat[-2]), (route_lon[-1], route_lat[-1])
+    )
+    extra_start = gcc.point_given_start_and_bearing(
+        (route_lon[0], route_lat[0]),
+        bearing_start,
+        extra_fraction * total_distance * 1000,
+    )
+    extra_end = gcc.point_given_start_and_bearing(
+        (route_lon[-1], route_lat[-1]),
+        bearing_end,
+        extra_fraction * total_distance * 1000,
+    )
+    route_lon_ext = np.array([extra_start[0], *route_lon, extra_end[0]])
+    route_lat_ext = np.array([extra_start[1], *route_lat, extra_end[1]])
+    route_distance_ext = get_route_distance(np.array([route_lon_ext, route_lat_ext]))
+    route_distance_ext -= route_distance_ext[1]
+    return route_lon_ext, route_lat_ext, route_distance_ext
