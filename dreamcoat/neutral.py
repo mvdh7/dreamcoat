@@ -52,18 +52,28 @@ class CruiseGraph(nx.Graph):
 
     def _get_veronis_here(self):
         # Calculate Veronis densities with each station referenced to itself
-        from neutralocean.label import veronis
+        # from neutralocean.label import veronis  # for neutralocean v2.2.0
+        from neutralocean.label import veronis_density  # for neutralocean v2.1.3
 
         self.ctdz["veronis_here"] = np.nan
         for s, station in self.ctdz.groupby("station"):
             for i, row in station.iterrows():
-                self.ctdz.loc[i, "veronis_here"] = veronis(
-                    row.pressure,
+                # For neutralocean v2.1.3:
+                self.ctdz.loc[i, "veronis_here"] = veronis_density(
                     station.salinity.values,
                     station.theta.values,
                     station.pressure.values,
+                    row.pressure,
                     eos="jmdfwg06",
                 )
+                # # For neutralocean v2.2.0:
+                # self.ctdz.loc[i, "veronis_here"] = veronis(
+                #     row.pressure,
+                #     station.salinity.values,
+                #     station.theta.values,
+                #     station.pressure.values,
+                #     eos="jmdfwg06",
+                # )
         self.ctdz["veronis_here"] -= 1000
 
     def _get_stations(self):
@@ -157,14 +167,24 @@ class CruiseGraph(nx.Graph):
         for i, p_init in enumerate(
             self.ctdz[self.ctdz.station == station_ref].pressure
         ):
+            # For neutralocean v2.1.3:
             surfaces[:, i] = omega_surf(
                 *self.stp,
                 self.grid,
                 pin_cast=i_ref,
-                p_init=p_init,
+                pin_p=p_init,
                 eos="jmdfwg06",
                 output=False
             )[2]
+            # # For neutralocean v2.2.0:
+            # surfaces[:, i] = omega_surf(
+            #     *self.stp,
+            #     self.grid,
+            #     pin_cast=i_ref,
+            #     p_init=p_init,
+            #     eos="jmdfwg06",
+            #     output=False
+            # )[2]
         self.surfaces_raw[station_ref] = surfaces
         self._smooth_and_interpolate(station_ref, cutoff=cutoff)
         self._get_ref_surfaces(station_ref)
@@ -304,7 +324,7 @@ class CruiseGraph(nx.Graph):
             default 0.2.
         """
         if station_ref not in self.surfaces:
-            self.get_surface(station_ref, cutoff=cutoff)
+            self.get_surfaces(station_ref, cutoff=cutoff)
         if extent is None:
             lat_min = self.stations.latitude.min()
             lat_max = self.stations.latitude.max()
@@ -320,6 +340,9 @@ class CruiseGraph(nx.Graph):
             ]
         pressure_ref = self.get_pressure_ref(station_ref)
         i = np.argmin(np.abs(pressure_ref - p_surface))
+        if i >= self.stations.loc[station_ref].npts:
+            i = self.stations.loc[station_ref].npts - 1
+        i = int(i)
         if crs is None:
             crs = ccrs.PlateCarree()
         self._get_pos(crs)
