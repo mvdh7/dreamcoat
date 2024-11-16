@@ -55,11 +55,12 @@ class CruiseGraph(nx.Graph):
         # from neutralocean.label import veronis  # for neutralocean v2.2.0
         from neutralocean.label import veronis_density  # for neutralocean v2.1.3
 
+        self.ctdz["veronis_here_raw"] = np.nan
         self.ctdz["veronis_here"] = np.nan
         for s, station in self.ctdz.groupby("station"):
             for i, row in station.iterrows():
                 # For neutralocean v2.1.3:
-                self.ctdz.loc[i, "veronis_here"] = veronis_density(
+                self.ctdz.loc[i, "veronis_here_raw"] = veronis_density(
                     station.salinity.values,
                     station.theta.values,
                     station.pressure.values,
@@ -67,14 +68,20 @@ class CruiseGraph(nx.Graph):
                     eos="jmdfwg06",
                 )
                 # # For neutralocean v2.2.0:
-                # self.ctdz.loc[i, "veronis_here"] = veronis(
+                # self.ctdz.loc[i, "veronis_here_raw"] = veronis(
                 #     row.pressure,
                 #     station.salinity.values,
                 #     station.theta.values,
                 #     station.pressure.values,
                 #     eos="jmdfwg06",
                 # )
-        self.ctdz["veronis_here"] -= 1000
+        self.ctdz["veronis_here_raw"] -= 1000
+        for s, station in self.ctdz.groupby("station"):
+            # TODO add remove outliers step before smoothing!  (search "cutoff" below)
+            S = self.ctdz.station == s
+            self.ctdz.loc[S, "veronis_here"] = plot.smooth_whittaker(
+                station.veronis_here_raw.values
+            )
 
     def _get_stations(self):
         self.stations = (
@@ -339,7 +346,7 @@ class CruiseGraph(nx.Graph):
                 lat_max + lat_diff * pad_latitude,
             ]
         pressure_ref = self.get_pressure_ref(station_ref)
-        i = np.argmin(np.abs(pressure_ref - p_surface))
+        i = np.argmin(np.abs(pressure_ref[~np.isnan(pressure_ref)] - p_surface))
         if i >= self.stations.loc[station_ref].npts:
             i = self.stations.loc[station_ref].npts - 1
         i = int(i)
