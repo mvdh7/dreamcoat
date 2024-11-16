@@ -32,6 +32,8 @@ maps
     Working with data in (longitude, latitude) space.
 meta
     Metadata for dreamcoat.
+neutral
+    Working with neutralocean surfaces.
 plot
     Shortcuts for data visualisations.
 underway
@@ -39,6 +41,8 @@ underway
 
 Classes
 -------
+CruiseGraph
+    A graph representation of a cruise for computing neutral surfaces.
 LatLon
     A tool to convert between decimal degrees and degrees decimal minutes.
 Route
@@ -51,7 +55,8 @@ hello
 """
 
 from .great_circle_calculator import great_circle_calculator as gcc
-from . import convert, ctd, glider, maps, meta, plot, stats, underway
+from . import convert, ctd, glider, maps, meta, neutral, plot, stats, underway
 from .maps import Route
 from .maps.degrees_decimal_minutes import LatLon
 from .meta import __version__, hello
+from .neutral import CruiseGraph
