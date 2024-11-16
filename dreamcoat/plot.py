@@ -168,3 +168,53 @@ def cluster_profile(
     ax.scatter(*xy, **scatter_kwargs)
     add_credit(ax)
     return fig, ax
+
+
+def smooth_whittaker(y, factor=1, monotonic=True):
+    """P-spline smoothing with the Whittaker graduation method.
+    Modified from https://stats.stackexchange.com/a/467320
+
+    Parameters
+    ----------
+    y : array-like
+        The data to smooth, assumed to be evenly spaced.
+    factor : float, optional
+        Smoothing factor.  The default is 1.
+    monotonic : bool, optional
+        Whether the smoothed curve should increase monotonically. The default is True.
+
+    Returns
+    -------
+    z : array-like
+        The smoothed data, with the same shape as x and y.
+    """
+    L = ~np.isnan(y)
+    # Prepare bases (Imat) and penalty
+    dd = 3
+    E = np.eye(L.sum())
+    D3 = np.diff(E, n=dd, axis=0)
+    D1 = np.diff(E, n=1, axis=0)
+    kp = 1e12
+    # Monotone smoothing
+    ws = np.zeros(L.sum() - 1)
+    for it in range(100):
+        Ws = np.diag(ws * kp)
+        zL = np.linalg.solve(E + factor * D3.T @ D3 + D1.T @ Ws @ D1, y[L])
+        ws_new = D1 @ zL < 0.0
+        dw = np.sum(ws != ws_new)
+        ws = ws_new
+        if dw == 0:
+            break
+    if monotonic:
+        # Enforce true monotonicity
+        zd = np.diff(zL)
+        min_growth = zd[zd > 0].min()
+        for i in range(1, len(zL)):
+            if zL[i] <= zL[i - 1]:
+                zL[i] = zL[i - 1] + min_growth * 1e-6
+    else:
+        # Non-monotonic fit
+        zL = np.linalg.solve(E + factor * D3.T @ D3, y[L])
+    z = np.full(y.shape, np.nan)
+    z[L] = zL
+    return z

@@ -36,7 +36,7 @@ from scipy import interpolate
 
 
 class CruiseGraph(nx.Graph):
-    def __init__(self, ctdz, crs=None):
+    def __init__(self, ctdz):
         super().__init__()
         self.ctdz = ctdz.copy()
         self.get_stations()
@@ -49,7 +49,7 @@ class CruiseGraph(nx.Graph):
         self.stations["npts"] = (
             self.ctdz[["station", "longitude"]].groupby("station").count()
         )
-        self.add_nodes_from(stations.index)
+        self.add_nodes_from(self.stations.index)
 
     def get_edge_distances(self):
         distances = {}
@@ -80,8 +80,8 @@ class CruiseGraph(nx.Graph):
         distances = []
         for edge in self.edges:
             _a, _b = edge
-            a.append((stations.index == _a).nonzero()[0][0])
-            b.append((stations.index == _b).nonzero()[0][0])
+            a.append((self.stations.index == _a).nonzero()[0][0])
+            b.append((self.stations.index == _b).nonzero()[0][0])
             distances.append(self.edges[edge]["distance"])
         self.grid = {
             "edges": np.array([a, b]),
@@ -93,7 +93,7 @@ class CruiseGraph(nx.Graph):
         stp_vars = ["salinity", "theta", "pressure"]
         stp = {}
         for v in stp_vars:
-            stp[v] = np.full((stations.shape[0], stations.npts.max()), np.nan)
+            stp[v] = np.full((self.stations.shape[0], self.stations.npts.max()), np.nan)
             for i, s in enumerate(self.stations.index):
                 S = self.ctdz.station == s
                 stp[v][i, : S.sum()] = self.ctdz[v][S].values
@@ -101,7 +101,7 @@ class CruiseGraph(nx.Graph):
 
     def get_levels(self, station_ref):
         i_ref = (self.stations.index == station_ref).nonzero()[0][0]
-        levels = np.full((stations.shape[0], stations.npts.max()), np.nan)
+        levels = np.full((self.stations.shape[0], self.stations.npts.max()), np.nan)
         for i, p_init in enumerate(
             self.ctdz[self.ctdz.station == station_ref].pressure
         ):
@@ -110,20 +110,16 @@ class CruiseGraph(nx.Graph):
             )[2]
         self.levels[station_ref] = levels
 
+    def get_pos(self, crs):
+        self.pos = {
+            i: crs.transform_points(ccrs.PlateCarree(), row.longitude, row.latitude)[0][
+                :2
+            ]
+            for i, row in self.stations.iterrows()
+        }
 
-extent = [-1, 7, 56.5, 64]
-fcrs = ccrs.EquidistantConic(central_longitude=np.mean([extent[0], extent[1]]))
-
-stations = ctdz[["station", "longitude", "latitude"]].groupby("station").mean()
-stations["npts"] = ctdz[["station", "longitude"]].groupby("station").count()
-
-pos = {
-    i: fcrs.transform_points(ccrs.PlateCarree(), row.longitude, row.latitude)[0][:2]
-    for i, row in stations.iterrows()
-}
 
 graph = CruiseGraph(ctdz)
-graph.add_nodes_from(stations.index)
 graph.add_edges_from(
     [
         [0, 24],
@@ -170,7 +166,9 @@ graph.add_edges_from(
 
 
 # Prepare edges for neutralocean surface calculation
-
+extent = [-1, 7, 56.5, 64]
+fcrs = ccrs.EquidistantConic(central_longitude=np.mean([extent[0], extent[1]]))
+graph.get_pos(fcrs)
 
 station_ref = 1
 i_ref = (graph.stations.index == station_ref).nonzero()[0][0]
@@ -184,7 +182,7 @@ levels = graph.levels[station_ref]
 
 levels_interp = levels.copy()
 pressure_ref = graph.stp[2][i_ref]
-for i in range(len(stations.index)):
+for i in range(len(graph.stations.index)):
     level = levels[i].copy()
     # First, remove single-point downward spikes
     for j in range(1, len(level) - 1):
@@ -213,9 +211,32 @@ for i in range(len(stations.index)):
     # plt.show()
     # plt.close()
 
+# %%
+
+# Simulate data
+# N = 100
+# xlo = 0.001
+# xhi = 2 * np.pi
+# x = np.arange(xlo, xhi, step=(xhi - xlo) / N)
+# y0 = np.sin(x) + np.log(x)
+# y = y0 + np.random.randn(N) * 0.5
+
+x = pressure_ref
+y = levels[4]
+
+zm = dc.plot.smooth_whittaker(y, factor=1)
+z2 = dc.plot.smooth_whittaker(y, factor=1, monotonic=False)
+
+# Plots
+plt.scatter(x, y, linestyle="None", color="gray", s=0.5, label="raw data")
+plt.plot(x, zm, color="red", label="monotonic smooth")
+plt.plot(x, z2, color="blue", linestyle="--", label="unconstrained smooth")
+plt.legend(loc="lower right")
+plt.show()
+
 # %% Get surfaces at other stations
 ctdz["pressure_refcx"] = np.nan
-for i, s in enumerate(stations.index):
+for i, s in enumerate(graph.stations.index):
     L = ~np.isnan(levels_interp[i])
     interp = interpolate.PchipInterpolator(
         levels_interp[i][L], pressure_ref[L], extrapolate=False
@@ -235,7 +256,7 @@ for i, s in enumerate(stations.index):
         zorder=3,
     )
     ax.scatter(pressure_ref, levels[i], s=5, zorder=2)
-    ax.set_title("Station {}".format(stations.index[i]))
+    ax.set_title("Station {}".format(graph.stations.index[i]))
     ax.set_xlabel("Pressure at reference station / dbar")
     ax.set_ylabel("Connection depth at station / dbar")
     ax.set_aspect(1)
@@ -272,7 +293,7 @@ l += 100
 fig, ax = plt.subplots(dpi=300, subplot_kw={"projection": fcrs})
 nx.draw_networkx(
     graph,
-    pos=pos,
+    pos=graph.pos,
     ax=ax,
     # Node marker properties
     node_size=0,
@@ -286,7 +307,7 @@ nx.draw_networkx(
 sc = ax.scatter(
     "longitude",
     "latitude",
-    data=stations,
+    data=graph.stations,
     transform=ccrs.PlateCarree(),
     s=20,
     c=levels_interp[:, l],
@@ -299,7 +320,7 @@ plt.colorbar(sc, label="Neutral surface pressure / dbar")
 ax.scatter(
     "longitude",
     "latitude",
-    data=stations.loc[station_ref],
+    data=graph.stations.loc[station_ref],
     s=20,
     c="none",
     edgecolor="k",
