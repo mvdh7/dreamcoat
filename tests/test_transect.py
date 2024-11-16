@@ -13,13 +13,8 @@ from neutralocean.surface import omega_surf
 from neutralocean.label import veronis
 
 # args
-deep = pd.read_parquet(
-    "/Users/matthew/github/NoSE-NL/64PE517/results/64PE517_deep_mvdh.parquet"
-)
-ctdz = pd.read_parquet(
-    "/Users/matthew/github/NoSE-NL/64PE517/results/64PE517_ctdz_mvdh.parquet"
-)
-ctdz = ctdz[ctdz.downcast]
+deep = pd.read_parquet("tests/data/deep.parquet")
+ctdz = pd.read_parquet("tests/data/ctdz.parquet")
 transects = {}
 transects[0] = [1, 59, 112, 81, 86]
 transects[1] = [8, 46, 63, 93]
@@ -174,8 +169,10 @@ fig, ax = plt.subplots(dpi=300)
 for s, station in tctdz.groupby("station"):
     ax.scatter(
         "transect_distance",
-        "pressure",
-        c="p_from_{}".format(tstations.index[s_iref]),
+        # "pressure",
+        # c="p_from_{}".format(tstations.index[s_iref]),
+        "p_from_{}".format(tstations.index[s_iref]),
+        c="theta",
         data=station,
     )
 ax.invert_yaxis()
