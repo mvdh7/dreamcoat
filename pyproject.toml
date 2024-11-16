@@ -28,6 +28,7 @@ dependencies = [
     "cartopy",
     "geographiclib",
     "matplotlib",
+    "networkx",
     "numpy",
     "pandas",
     "scikit-learn",

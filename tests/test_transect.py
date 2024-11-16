@@ -3,11 +3,6 @@ import numpy as np
 from scipy import interpolate
 from matplotlib import pyplot as plt
 import dreamcoat as dc
-from sys import path
-
-epath = "/Users/matthew/github/neutralocean"
-if epath not in path:
-    path.append(epath)
 from neutralocean.traj import neutral_trajectory
 from neutralocean.surface import omega_surf
 from neutralocean.label import veronis
