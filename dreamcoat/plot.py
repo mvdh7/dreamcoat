@@ -207,11 +207,10 @@ def smooth_whittaker(y, factor=1, monotonic=True):
             break
     if monotonic:
         # Enforce true monotonicity
-        zd = np.diff(zL)
-        min_growth = zd[zd > 0].min()
+        zLd = np.diff(zL)
         for i in range(1, len(zL)):
             if zL[i] <= zL[i - 1]:
-                zL[i] = zL[i - 1] + min_growth * 1e-6
+                zL[i] = zL[i - 1] + zL[i - 1] * 1e-12
     else:
         # Non-monotonic fit
         zL = np.linalg.solve(E + factor * D3.T @ D3, y[L])
