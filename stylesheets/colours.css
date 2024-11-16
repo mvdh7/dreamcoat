@@ -1,0 +1,10 @@
+[data-md-color-scheme="dreamcoat-red"] {
+    --md-primary-fg-color: #e50000;
+    --md-accent-fg-color: #e50000aa;
+    --md-typeset-a-color: #e50000;
+}
+[data-md-color-scheme="dreamcoat-green"] {
+  --md-primary-fg-color: #15b01a;
+  --md-accent-fg-color: #15b01aaa;
+  --md-typeset-a-color: #15b01a;
+}
