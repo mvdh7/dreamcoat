@@ -1,7 +1,7 @@
 import os
 
-version_number = "0.3"
-version_colour = "green"
+version_number = "0.4"
+version_colour = "brown"
 __version__ = "{}-{}".format(version_number, version_colour)
 
 

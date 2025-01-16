@@ -15,10 +15,12 @@ read_btl_dir
     Import all btl files in a directory and parse them into a usable format.
 read_btl_raw
     Import a btl file from the CTD with minimal processing.
-read_cnv_1Hz
-    Read the contents of a 1 Hz cnv file from a CTD cast.
+read_cnv
+    Read the contents of a cnv file from a CTD cast.
 read_ctd_bl_create_btl
     Create a new "btl file" from the 1 Hz data file with a selected averaging period.
+get_downcast_upcast_1m_u_d
+    Make logicals for downcast and upcast sections of a 1m-binned CTD file.
 """
 
 import os
@@ -58,8 +60,8 @@ ctd_renamer = {
 ctd_Renamer = {k[0].upper() + k[1:]: v for k, v in ctd_renamer.items()}
 
 
-def read_cnv_1Hz(filename, station=None):
-    """Read the contents of a 1 Hz cnv file from a CTD cast.
+def read_cnv(filename, station=None):
+    """Read the contents of a cnv file from a CTD cast.
 
     Parameters
     ----------
@@ -112,14 +114,14 @@ def read_cnv_1Hz(filename, station=None):
             encoding_errors="replace",
             names=names,
             skiprows=skiprows,
-            # delim_whitespace=True,
             sep=r"\s+",
         )
         .drop(columns=names_duplicate)
         .rename(columns=ctd_renamer)
     )
     # Add positional information to the dataframe
-    ctd_Hz["station"] = int(station)
+    if station is not None:
+        ctd_Hz["station"] = int(station)
     ctd_Hz["datetime"] = start_time + np.arange(0, ctd_Hz.shape[0]).astype(
         "timedelta64[s]"
     )
@@ -323,7 +325,7 @@ def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
         The new "btl file" with all variables averaged over the specified period before
         each bottle firing moment.
     """
-    ctd = read_cnv_1Hz(filename_cnv_1Hz)
+    ctd = read_cnv(filename_cnv_1Hz)
     bl = read_bl(filename_bl)
     # Make new btl table
     btl = bl.set_index("bottle")
@@ -344,6 +346,10 @@ def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
             if c not in ["bottle", "datetime", "datenum"]:
                 btl.loc[i, c] = ctd.loc[L, c].mean()
                 btl.loc[i, c + "_std"] = ctd.loc[L, c].std()
+                if np.isnan(btl.loc[i, c]):
+                    btl.loc[i, c + "_flag"] = 9
+                else:
+                    btl.loc[i, c + "_flag"] = 2
     return ctd, btl
 
 
@@ -379,6 +385,7 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None, verbose=True):
         cluster_vars = list(btl.columns)
         if "bottle" in cluster_vars:
             cluster_vars.remove("bottle")
+        cluster_vars = [v for v in cluster_vars if not v.endswith("_std")]
     for k in deep:
         if k in cluster_vars:
             cluster_vars.remove(k)
@@ -420,3 +427,36 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None, verbose=True):
     )
     deep = deep.set_index("station_depth")
     return deep
+
+
+def get_downcast_upcast_1m_u_d(ctd_1m_u_d, inplace=True):
+    """Make logicals for downcast and upcast sections of a 1m-binned CTD file.
+
+    Parameters
+    ----------
+    ctd_1m_u_d : pd.DataFrame
+        A 1m-binned CTD file including both downcast and upcast sections.
+        May include data from multiple different stations.
+        Must contain a filled "station" column, even if there is only one station.
+    inplace : bool, optional
+        Whether to add the new columns in-place, by default True
+
+    Returns
+    -------
+    pd.DataFrame
+        The ctd_1m_u_d dataframe with extra Boolean columns "downcast" and "upcast".
+    """
+    if not inplace:
+        ctd_1m_u_d = ctd_1m_u_d.copy()
+    ctd_1m_u_d["downcast"] = False
+    ctd_1m_u_d["upcast"] = False
+    for s, cast in ctd_1m_u_d.groupby("station"):
+        sdiff = cast.depth.diff()
+        sdiff.iloc[0] = 1
+        sdiff_shift = sdiff.shift(-1)
+        sdiff_shift.iloc[-1] = -1
+        S = ctd_1m_u_d.station == s
+        ctd_1m_u_d.loc[S, "downcast"] = sdiff > 0
+        ctd_1m_u_d.loc[S, "upcast"] = sdiff_shift < 0
+    if not inplace:
+        return ctd_1m_u_d

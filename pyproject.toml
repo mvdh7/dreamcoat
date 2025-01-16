@@ -8,18 +8,34 @@ build-backend = "setuptools.build_meta"
 name = "dreamcoat"
 description = "The joyful oceanographic seagoing expedition planning helper"
 readme = "README.md"
+classifiers =[
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Natural Language :: English",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Oceanography",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
 dependencies = [
-    "fsspec",
+    "cartopy",
     "geographiclib",
-    "great_circle_calculator",
     "matplotlib",
+    "networkx",
     "numpy",
+    "pandas",
     "scikit-learn",
     "scipy",
-    "shapely",
-    "vptree",
 ]
 dynamic = ["version"]
+
+[tool.setuptools.packages.find]
+include = ["dreamcoat*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "dreamcoat.meta.version_number"}

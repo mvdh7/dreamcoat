@@ -1,0 +1,30 @@
+name: Run tests 
+on:
+  push:
+    paths:
+      - .github/workflows/tests.yml
+      - dreamcoat/**
+      - tests/**
+jobs:
+  build:
+    name: Build package and run tests
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest neutralocean pyarrow
+        pip install .
+    - name: Test with pytest
+      run: |
+        pytest
