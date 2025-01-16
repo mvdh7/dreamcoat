@@ -11,4 +11,5 @@ The joyful oceanographic seagoing expedition planning helper
 
 ## Version list
 
-![versions](https://raw.githubusercontent.com/mvdh7/dreamcoat/038cba417db0ed9cd51358b123268fb9ace88aa0/docs/versions.svg)
+![versions](https://raw.githubusercontent.com/mvdh7/dreamcoat/3551e8b708a05d69f0b390c83ca8cff4a0c9a617/docs/versions.svg)
+
