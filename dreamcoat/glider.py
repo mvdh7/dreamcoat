@@ -1,8 +1,8 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
-def read_goto(filename):
+def read_goto(filename: str) -> pd.DataFrame:
     """Import and parse route waypoints in a goto file.
 
     Parameters
@@ -17,12 +17,11 @@ def read_goto(filename):
     """
     with open(filename, "r") as f:
         data = f.readlines()
-    is_waypoints = False
-    for i, l in enumerate(data):
+    for i, line in enumerate(data):
         wpline = "b_arg: num_waypoints(nodim)"
-        if l.lstrip().startswith("b_arg: num_waypoints(nodim)"):
-            num_waypoints = int(l.lstrip().split(wpline)[1].split("#")[0])
-        elif l.strip() == "<start:waypoints>":
+        if line.lstrip().startswith("b_arg: num_waypoints(nodim)"):
+            num_waypoints = int(line.lstrip().split(wpline)[1].split("#")[0])
+        elif line.strip() == "<start:waypoints>":
             break
     waypoints = data[i + 1 : i + 1 + num_waypoints]
     waypoints = np.array([wp.split() for wp in waypoints])

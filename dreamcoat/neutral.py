@@ -1,9 +1,10 @@
-import pandas as pd
-import numpy as np
 import networkx as nx
-from scipy import interpolate
+import numpy as np
+from cartopy import crs as ccrs
+from cartopy import feature as cfeature
 from matplotlib import pyplot as plt
-from cartopy import crs as ccrs, feature as cfeature
+from scipy import interpolate
+
 from . import maps, plot
 
 
@@ -104,18 +105,18 @@ class CruiseGraph(nx.Graph):
         nx.set_edge_attributes(self, distances, "distance")
 
     def add_edges_from(self, ebunch_to_add, **attr):
-        assert np.all(
-            np.isin(ebunch_to_add, self.stations.index)
-        ), "All nodes must be in the existing list of stations!"
+        assert np.all(np.isin(ebunch_to_add, self.stations.index)), (
+            "All nodes must be in the existing list of stations!"
+        )
         super().add_edges_from(ebunch_to_add, **attr)
         self._get_edge_distances()
         self._get_grid()
         self._get_stp()
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
-        assert (
-            u_of_edge in self.stations.index and v_of_edge in self.stations.index
-        ), "Both u_of_edge and v_of_edge must be in the existing list of stations!"
+        assert u_of_edge in self.stations.index and v_of_edge in self.stations.index, (
+            "Both u_of_edge and v_of_edge must be in the existing list of stations!"
+        )
         super().add_edge(u_of_edge, v_of_edge, **attr)
         self._get_edge_distances()
         self._get_grid()
@@ -181,7 +182,7 @@ class CruiseGraph(nx.Graph):
                 pin_cast=i_ref,
                 pin_p=p_init,
                 eos="jmdfwg06",
-                output=False
+                output=False,
             )[2]
             # # For neutralocean v2.2.0:
             # surfaces[:, i] = omega_surf(
