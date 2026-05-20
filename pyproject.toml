@@ -24,14 +24,11 @@ classifiers =[
     "Topic :: Scientific/Engineering :: Visualization",
 ]
 dependencies = [
-    "cartopy",
-    "geographiclib",
-    "matplotlib",
-    "networkx",
-    "numpy",
-    "pandas",
-    "scikit-learn",
-    "scipy",
+    "numpy>=2.4.6,<3",
+    "geographiclib>=2.1,<3",
+    "networkx>=3.6.1,<4",
+    "scipy>=1.17.1,<2",
+    "scikit-learn>=1.8.0,<2",
 ]
 dynamic = ["version"]
 requires-python = ">= 3.11"
@@ -50,8 +47,16 @@ combine-as-imports = true
 force-single-line = false
 lines-after-imports = 2
 
-[dependency-groups]
-dev = [
-    "ipykernel>=6.31.0",
-    "pytest>=8.4.2",
-]
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+[tool.pixi.pypi-dependencies]
+dreamcoat = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+
+[tool.pixi.dependencies]
+ipykernel = ">=7.2.0,<8"
+pytest = ">=9.0.3,<10"
+cartopy = ">=0.25.0,<0.26"

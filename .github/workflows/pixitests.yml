@@ -1,0 +1,23 @@
+name: Run pixi tests 
+on:
+  push:
+    paths:
+      - .github/workflows/pixitests.yml
+      - dreamcoat/**
+      - tests/**
+jobs:
+  build:
+    name: Build package and run tests
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+        os: ["ubuntu-latest", "windows-latest", "macos-latest"]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Set up pixi
+      uses: prefix-dev/setup-pixi@v0.9.5
+      with:
+        pixi-version: v0.66.0
+        cache: true
+        auth-host: prefix.dev
+        auth-token: ${{ secrets.PREFIX_DEV_TOKEN }}

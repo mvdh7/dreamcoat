@@ -54,9 +54,18 @@ hello
     Report the version number.
 """
 
-from . import convert, ctd, glider, maps, meta, neutral, plot, stats, underway
 from .great_circle_calculator import great_circle_calculator as gcc
 from .maps import Route
 from .maps.degrees_decimal_minutes import LatLon
 from .meta import __version__, hello
 from .neutral import CruiseGraph
+
+
+__all__ = [
+    "gcc",
+    "Route",
+    "LatLon",
+    "__version__",
+    "hello",
+    "CruiseGraph",
+]
