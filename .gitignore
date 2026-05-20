@@ -3,6 +3,7 @@
 
 # Mac stuff
 .DS_Store
+*.code-workspace
 
 # Downloaded data files
 *.nc

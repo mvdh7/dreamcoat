@@ -39,3 +39,11 @@ include = ["dreamcoat*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "dreamcoat.meta.version_number"}
+
+[tool.ruff]
+line-length = 79
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+force-single-line = false
+lines-after-imports = 2
