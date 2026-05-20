@@ -10,9 +10,10 @@ description = "The joyful oceanographic seagoing expedition planning helper"
 readme = "README.md"
 classifiers =[
     "Development Status :: 4 - Beta",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
     "Natural Language :: English",
@@ -33,6 +34,7 @@ dependencies = [
     "scipy",
 ]
 dynamic = ["version"]
+requires-python = ">= 3.11"
 
 [tool.setuptools.packages.find]
 include = ["dreamcoat*"]
@@ -47,3 +49,9 @@ line-length = 79
 combine-as-imports = true
 force-single-line = false
 lines-after-imports = 2
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.31.0",
+    "pytest>=8.4.2",
+]
