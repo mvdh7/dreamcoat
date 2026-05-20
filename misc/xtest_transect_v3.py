@@ -1,8 +1,10 @@
-import pandas as pd
 import numpy as np
-from scipy import interpolate
+import pandas as pd
 from matplotlib import pyplot as plt
+from scipy import interpolate
+
 import dreamcoat as dc
+
 
 # args
 deep = pd.read_parquet("tests/data/deep.parquet")
@@ -36,7 +38,9 @@ tctdz["transect_distance"] = tstations.loc[tctdz.station].distance.values
 
 # Make and extend route
 route_lon, route_lat, route_distance = dc.maps.extend_route(
-    tstations.longitude.values, tstations.latitude.values, extra_fraction=extra_fraction
+    tstations.longitude.values,
+    tstations.latitude.values,
+    extra_fraction=extra_fraction,
 )
 
 # Get neutral trajectories
@@ -45,6 +49,7 @@ for i in range(1, len(transect_stations)):
     transect.add_edge(transect_stations[i - 1], transect_stations[i])
 
 from neutralocean.traj import neutral_trajectory
+
 
 # %%
 tc = transect.ctdz  # just for convenience
@@ -77,21 +82,27 @@ for s in range(len(transect_stations) - 1):
         traj[L], tc[S].pressure[L], extrapolate=False
     )
     T = tc.station == transect_stations[s + 1]
-    tc.loc[T, "p_at_{}".format(transect_stations[s])] = interp_invert(tc[T].pressure)
+    tc.loc[T, "p_at_{}".format(transect_stations[s])] = interp_invert(
+        tc[T].pressure
+    )
     interp_veronis = interpolate.PchipInterpolator(
         tc[S].pressure, tc[S].veronis, extrapolate=False
     )
     tc.loc[T, "veronis_{}".format(transect_stations[s])] = interp_veronis(
         tc[T]["p_at_{}".format(transect_stations[s])]
     )
-    tc.loc[T, "veronis"] = tc[T]["veronis_{}".format(transect_stations[s])].copy()
+    tc.loc[T, "veronis"] = tc[T][
+        "veronis_{}".format(transect_stations[s])
+    ].copy()
     # Find where the next station along the transect doesn't have Veronis labels
     # assigned from the previous station (at the top and bottom)
     veronis_ix_range = tc[T].veronis.notnull().values.nonzero()[0][[0, -1]]
     # ^ this contains the [first, last] iloc with Veronis values
     # Calculate the difference between the in situ Veronis label and the labels
     # assigned from the previous station at the top and bottom of the assignment range
-    veronis_offset = (tc.veronis - tc.veronis_here)[T].iloc[veronis_ix_range].values
+    veronis_offset = (
+        (tc.veronis - tc.veronis_here)[T].iloc[veronis_ix_range].values
+    )
     # Fill in the unassigned Veronis labels with the in situ values adjusted by the
     # offset, so that the Veronis curve joins smoothly and remains monotonic
     veronis_next = tc[T].veronis.values
@@ -219,7 +230,9 @@ interp_veronis = interpolate.RBFInterpolator(xy_v, z_v, **kernel)
 gx_v = np.linspace(route_distance[0], route_distance[-1], num=500)
 gy_v = np.linspace(0, np.max(y_v) + 10, num=500)
 gx_v, gy_v = np.meshgrid(gx_v, gy_v)
-gz_v = interp_veronis(np.array([gx_v.ravel() * xscale_veronis, gy_v.ravel()]).T)
+gz_v = interp_veronis(
+    np.array([gx_v.ravel() * xscale_veronis, gy_v.ravel()]).T
+)
 gz_v = np.reshape(gz_v, gx_v.shape)
 
 # Visualise Veronis interpolation

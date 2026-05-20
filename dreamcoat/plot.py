@@ -1,12 +1,17 @@
-from collections import namedtuple
 import warnings
-from matplotlib import pyplot as plt  # , patheffects as pe
+from collections import namedtuple
+
 import numpy as np
+from matplotlib import pyplot as plt  # , patheffects as pe
 from scipy import interpolate
 from sklearn import cluster
+
 from . import meta, stats
 
-Clustered = namedtuple("Clustered", ("x", "Y", "std", "std_unbiased", "count", "label"))
+
+Clustered = namedtuple(
+    "Clustered", ("x", "Y", "std", "std_unbiased", "count", "label")
+)
 
 
 def add_credit(ax):

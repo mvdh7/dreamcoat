@@ -1,7 +1,6 @@
 import networkx as nx
 import numpy as np
-from cartopy import crs as ccrs
-from cartopy import feature as cfeature
+from cartopy import crs as ccrs, feature as cfeature
 from matplotlib import pyplot as plt
 from scipy import interpolate
 
@@ -54,7 +53,9 @@ class CruiseGraph(nx.Graph):
     def _get_veronis_here(self):
         # Calculate Veronis densities with each station referenced to itself
         # from neutralocean.label import veronis  # for neutralocean v2.2.0
-        from neutralocean.label import veronis_density  # for neutralocean v2.1.3
+        from neutralocean.label import (
+            veronis_density,  # for neutralocean v2.1.3
+        )
 
         self.ctdz["veronis_here_raw"] = np.nan
         self.ctdz["veronis_here"] = np.nan
@@ -86,7 +87,9 @@ class CruiseGraph(nx.Graph):
 
     def _get_stations(self):
         self.stations = (
-            self.ctdz[["station", "longitude", "latitude"]].groupby("station").mean()
+            self.ctdz[["station", "longitude", "latitude"]]
+            .groupby("station")
+            .mean()
         )
         self.stations["npts"] = (
             self.ctdz[["station", "longitude"]].groupby("station").count()
@@ -114,7 +117,10 @@ class CruiseGraph(nx.Graph):
         self._get_stp()
 
     def add_edge(self, u_of_edge, v_of_edge, **attr):
-        assert u_of_edge in self.stations.index and v_of_edge in self.stations.index, (
+        assert (
+            u_of_edge in self.stations.index
+            and v_of_edge in self.stations.index
+        ), (
             "Both u_of_edge and v_of_edge must be in the existing list of stations!"
         )
         super().add_edge(u_of_edge, v_of_edge, **attr)
@@ -141,7 +147,9 @@ class CruiseGraph(nx.Graph):
         stp_vars = ["salinity", "theta", "pressure"]
         stp = {}
         for v in stp_vars:
-            stp[v] = np.full((self.stations.shape[0], self.stations.npts.max()), np.nan)
+            stp[v] = np.full(
+                (self.stations.shape[0], self.stations.npts.max()), np.nan
+            )
             for i, s in enumerate(self.stations.index):
                 S = self.ctdz.station == s
                 stp[v][i, : S.sum()] = self.ctdz[v][S].values
@@ -171,7 +179,9 @@ class CruiseGraph(nx.Graph):
         from neutralocean.surface import omega_surf
 
         i_ref = self._station_to_index(station_ref)
-        surfaces = np.full((self.stations.shape[0], self.stations.npts.max()), np.nan)
+        surfaces = np.full(
+            (self.stations.shape[0], self.stations.npts.max()), np.nan
+        )
         for i, p_init in enumerate(
             self.ctdz[self.ctdz.station == station_ref].pressure
         ):
@@ -230,7 +240,9 @@ class CruiseGraph(nx.Graph):
                     & (np.abs(station[j] - station[j + 1]) >= cutoff)
                     & (np.abs(station[j - 1] - station[j + 1]) <= cutoff)
                 ):
-                    surfaces_raw_clean[i, j] = (station[j - 1] + station[j + 1]) / 2
+                    surfaces_raw_clean[i, j] = (
+                        station[j - 1] + station[j + 1]
+                    ) / 2
         return surfaces_raw_clean
 
     def _smooth_and_interpolate(self, station_ref, cutoff=5):
@@ -252,7 +264,9 @@ class CruiseGraph(nx.Graph):
         for i, s in enumerate(self.stations.index):
             L = ~np.isnan(self.surfaces[station_ref][i])
             interp = interpolate.PchipInterpolator(
-                self.surfaces[station_ref][i][L], pressure_ref[L], extrapolate=False
+                self.surfaces[station_ref][i][L],
+                pressure_ref[L],
+                extrapolate=False,
             )
             S = self.ctdz.station == s
             self.ctdz.loc[S, "p_at_{}".format(station_ref)] = interp(
@@ -347,7 +361,9 @@ class CruiseGraph(nx.Graph):
                 lat_max + lat_diff * pad_latitude,
             ]
         pressure_ref = self.get_pressure_ref(station_ref)
-        i = np.argmin(np.abs(pressure_ref[~np.isnan(pressure_ref)] - p_surface))
+        i = np.argmin(
+            np.abs(pressure_ref[~np.isnan(pressure_ref)] - p_surface)
+        )
         if i >= self.stations.loc[station_ref].npts:
             i = self.stations.loc[station_ref].npts - 1
         i = int(i)
@@ -377,8 +393,12 @@ class CruiseGraph(nx.Graph):
             c=self.surfaces[station_ref][:, i],
             zorder=10,
             cmap="viridis_r",
-            vmin=self.ctdz.loc[self.ctdz.station == station_ref].pressure.min(),
-            vmax=self.ctdz.loc[self.ctdz.station == station_ref].pressure.max(),
+            vmin=self.ctdz.loc[
+                self.ctdz.station == station_ref
+            ].pressure.min(),
+            vmax=self.ctdz.loc[
+                self.ctdz.station == station_ref
+            ].pressure.max(),
         )
         plt.colorbar(sc, label="Neutral surface pressure / dbar")
         ax.scatter(
@@ -394,12 +414,18 @@ class CruiseGraph(nx.Graph):
         ax.set_extent(extent, crs=ccrs.Geodetic())
         ax.set_title(
             "Ref. pressure = {:.1f} dbar".format(
-                self.ctdz.loc[self.ctdz.station == station_ref].pressure.iloc[i]
+                self.ctdz.loc[self.ctdz.station == station_ref].pressure.iloc[
+                    i
+                ]
             )
         )
         ax.add_feature(
             cfeature.NaturalEarthFeature(
-                "physical", "land", "10m", edgecolor="none", facecolor="xkcd:dark"
+                "physical",
+                "land",
+                "10m",
+                edgecolor="none",
+                facecolor="xkcd:dark",
             )
         )
         plot.add_credit(ax)

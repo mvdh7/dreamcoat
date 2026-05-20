@@ -1,6 +1,7 @@
 import numpy as np
-from dreamcoat.maps import vptree
+
 import dreamcoat as dc
+from dreamcoat.maps import vptree
 
 
 lat_range = (50, 55)

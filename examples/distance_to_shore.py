@@ -1,9 +1,10 @@
 # Goal: distance-to-shore calculation for NWESDAP
+import numpy as np
+from cartopy import crs as ccrs, feature as cfeature
+from matplotlib import pyplot as plt
 
 import dreamcoat as dc
-import numpy as np
-from matplotlib import pyplot as plt
-from cartopy import crs as ccrs, feature as cfeature
+
 
 # Build VP tree
 vptree_lats = np.array([42, 60])

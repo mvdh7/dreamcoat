@@ -1,5 +1,6 @@
 import os
 
+
 version_number = "0.4"
 version_colour = "brown"
 __version__ = "{}-{}".format(version_number, version_colour)
@@ -18,7 +19,9 @@ def hello():
    """
     )
     print(
-        "{:^88}".format("The joyful oceanographic seagoing expedition planning helper")
+        "{:^88}".format(
+            "The joyful oceanographic seagoing expedition planning helper"
+        )
     )
     print(
         "{:^88}".format(
@@ -42,7 +45,9 @@ def get_dat_data(filename):
     str
         The value stored in the .dat file or provided by the user.
     """
-    fn = os.sep.join((os.path.expanduser("~"), ".dreamcoat", "{}.dat".format(filename)))
+    fn = os.sep.join(
+        (os.path.expanduser("~"), ".dreamcoat", "{}.dat".format(filename))
+    )
     try:
         with open(fn, "r") as f:
             data = f.read().splitlines()[0]

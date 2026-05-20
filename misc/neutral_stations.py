@@ -1,6 +1,8 @@
 import pandas as pd
-import dreamcoat as dc
 from matplotlib import pyplot as plt
+
+import dreamcoat as dc
+
 
 # Prepare adjacency edges for neutralocean surface calculation
 edges = [
@@ -54,8 +56,12 @@ pressure_ref = graph.get_pressure_ref(station_ref)
 for i, s in enumerate(graph.stations.index):
     S = ctdz.station == s
     fig, ax = plt.subplots(dpi=300)
-    ax.plot(pressure_ref, graph.surfaces_raw[station_ref][i], c="xkcd:black", lw=3)
-    ax.plot(pressure_ref, graph.surfaces[station_ref][i], c="xkcd:strawberry", lw=3)
+    ax.plot(
+        pressure_ref, graph.surfaces_raw[station_ref][i], c="xkcd:black", lw=3
+    )
+    ax.plot(
+        pressure_ref, graph.surfaces[station_ref][i], c="xkcd:strawberry", lw=3
+    )
     ax.plot(
         "p_at_{}".format(station_ref),
         "pressure",

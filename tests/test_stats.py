@@ -1,5 +1,6 @@
-import dreamcoat as dc
 import numpy as np
+
+import dreamcoat as dc
 
 
 def test_std_bias_correction():

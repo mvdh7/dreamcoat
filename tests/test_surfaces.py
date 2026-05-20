@@ -1,7 +1,9 @@
-import pandas as pd
 import numpy as np
-import dreamcoat as dc
+import pandas as pd
 from cartopy import crs as ccrs
+
+import dreamcoat as dc
+
 
 # Prepare adjacency edges for neutralocean surface calculation
 edges = [
@@ -64,7 +66,9 @@ def test_get_surfaces_all():
 
 def test_plot_surface_map():
     extent = [-1, 7, 56.5, 64]
-    crs = ccrs.EquidistantConic(central_longitude=np.mean([extent[0], extent[1]]))
+    crs = ccrs.EquidistantConic(
+        central_longitude=np.mean([extent[0], extent[1]])
+    )
     fig, ax = graph.plot_surface_map(1, 50, crs=crs, extent=extent)
     fig, ax = graph.plot_surface_map(8, 50, crs=crs, extent=extent)
 

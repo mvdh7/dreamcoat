@@ -1,8 +1,10 @@
-import pandas as pd
 import numpy as np
-from scipy import interpolate
+import pandas as pd
 from matplotlib import pyplot as plt
+from scipy import interpolate
+
 import dreamcoat as dc
+
 
 # args
 deep = pd.read_parquet("tests/data/deep.parquet")
@@ -37,7 +39,9 @@ tctdz["transect_distance"] = tstations.loc[tctdz.station].distance.values
 
 # Make and extend route
 route_lon, route_lat, route_distance = dc.maps.extend_route(
-    tstations.longitude.values, tstations.latitude.values, extra_fraction=extra_fraction
+    tstations.longitude.values,
+    tstations.latitude.values,
+    extra_fraction=extra_fraction,
 )
 
 # Get omega surfaces
@@ -141,7 +145,9 @@ veronis_ix_range = tc[S].veronis.notnull().values.nonzero()[0][[0, -1]]
 
 # Calculate the difference between the in situ Veronis label and the labels assigned
 # from the previous station at the top and bottom of the assignment range
-veronis_offset = (tc.veronis - tc.veronis_here)[S].iloc[veronis_ix_range].values
+veronis_offset = (
+    (tc.veronis - tc.veronis_here)[S].iloc[veronis_ix_range].values
+)
 
 # Fill in the unassigned Veronis labels with the in situ values adjusted by the offset,
 # so that the Veronis curve joins smoothly and remains monotonic

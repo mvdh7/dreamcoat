@@ -9,8 +9,8 @@ read_sql
     Import the data from an sql underway file and parse it into a usable format.
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 from matplotlib import dates as mdates
 
 
@@ -44,12 +44,17 @@ def read_sql(filename):
         data_line = "INSERT INTO `aggregated` VALUES ("
         if line.startswith(data_line):
             line_data = (
-                line.replace("'", "").split(data_line)[1].split(");\n")[0].split("),(")
+                line.replace("'", "")
+                .split(data_line)[1]
+                .split(");\n")[0]
+                .split("),(")
             )
             line_data = [d.split(",") for d in line_data]
             underway = [*underway, *line_data]
     underway_array = np.array(underway)
-    underway = pd.DataFrame({h: underway_array[:, i] for i, h in enumerate(headers)})
+    underway = pd.DataFrame(
+        {h: underway_array[:, i] for i, h in enumerate(headers)}
+    )
     # Convert all float columns to floats
     underway = underway.replace(["INVALID", ""], "-999")
     underway = underway.replace("°", "")

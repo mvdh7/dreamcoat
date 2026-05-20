@@ -1,11 +1,13 @@
-import pandas as pd
 import numpy as np
-from scipy import interpolate
+import pandas as pd
 from matplotlib import pyplot as plt
-import dreamcoat as dc
-from neutralocean.traj import neutral_trajectory
-from neutralocean.surface import omega_surf
 from neutralocean.label import veronis
+from neutralocean.surface import omega_surf
+from neutralocean.traj import neutral_trajectory
+from scipy import interpolate
+
+import dreamcoat as dc
+
 
 # args
 deep = pd.read_parquet("tests/data/deep.parquet")
@@ -35,13 +37,17 @@ tstations = (
 tstations["distance"] = dc.maps.get_route_distance(
     tstations[["longitude", "latitude"]].values.T
 )
-tstations["npts_ctdz"] = tctdz[["station", "longitude"]].groupby("station").count()
+tstations["npts_ctdz"] = (
+    tctdz[["station", "longitude"]].groupby("station").count()
+)
 tdeep["transect_distance"] = tstations.loc[tdeep.station].distance.values
 tctdz["transect_distance"] = tstations.loc[tctdz.station].distance.values
 
 # Make and extend route
 route_lon, route_lat, route_distance = dc.maps.extend_route(
-    tstations.longitude.values, tstations.latitude.values, extra_fraction=extra_fraction
+    tstations.longitude.values,
+    tstations.latitude.values,
+    extra_fraction=extra_fraction,
 )
 
 # Calculate Veronis densities with each station referenced to itself
@@ -62,7 +68,9 @@ def get_stp(tctdz, tstations):
     stp_vars = ["salinity", "theta", "pressure"]
     stp = {}
     for v in stp_vars:
-        stp[v] = np.full((tstations.shape[0], tstations.npts_ctdz.max()), np.nan)
+        stp[v] = np.full(
+            (tstations.shape[0], tstations.npts_ctdz.max()), np.nan
+        )
         for i, s in enumerate(tstations.index):
             S = tctdz.station == s
             stp[v][i, : S.sum()] = tctdz[v][S].values
@@ -99,7 +107,9 @@ for i, s in enumerate(tstations.index):
     tctdz.loc[S, "p_at_{}_s".format(s)] = (
         tctdz.loc[S, "p_at_{}".format(s)]
         .rolling(window, min_periods=5, win_type="gaussian")
-        .mean(std=1)  # change the value of std to adjust the degree of smoothing
+        .mean(
+            std=1
+        )  # change the value of std to adjust the degree of smoothing
     ).shift(-int(np.floor(window / 2)))
 
 # Invert trajectories (get pressure at reference station corresponding to others)

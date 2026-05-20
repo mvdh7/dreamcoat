@@ -1,4 +1,5 @@
 import warnings
+
 import numpy as np
 from scipy.special import factorial
 
@@ -61,7 +62,9 @@ def std_unbiased(a, axis=None, **kwargs):
         size_a = np.shape(a)[axis]
     c4 = std_bias_correction(size_a)
     with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", message="Degrees of freedom <= 0 for slice.")
+        warnings.filterwarnings(
+            "ignore", message="Degrees of freedom <= 0 for slice."
+        )
         std_biased = np.nanstd(a, axis=axis, ddof=1, **kwargs)
         # ^ ddof must be 1 in order for the c4 correction to be valid
     return std_biased / c4

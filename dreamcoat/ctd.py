@@ -25,10 +25,13 @@ get_downcast_upcast_1m_u_d
 
 import os
 import textwrap
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 from matplotlib import dates as mdates
+
 from . import plot
+
 
 ctd_renamer = {
     "scan": "scan",
@@ -92,12 +95,16 @@ def read_cnv(filename, station=None):
                     latitude *= -1
             if ctd_Hz_line.startswith("* NMEA Longitude = "):
                 longitude_txt = ctd_Hz_line.split(" = ")[1].split(" ")
-                longitude = float(longitude_txt[0]) + float(longitude_txt[1]) / 60
+                longitude = (
+                    float(longitude_txt[0]) + float(longitude_txt[1]) / 60
+                )
                 if longitude_txt[2] == "W\n":
                     longitude *= -1
             # Get datetime information
             if ctd_Hz_line.startswith("# start_time = "):
-                start_time = pd.to_datetime(ctd_Hz_line.split(" = ")[1].split("[")[0])
+                start_time = pd.to_datetime(
+                    ctd_Hz_line.split(" = ")[1].split("[")[0]
+                )
             # Increment row counter
             skiprows += 1
     # Deal with duplicate names by appending "_2" to their second appearance
@@ -236,12 +243,20 @@ def read_btl(filename, station=None, **kwargs):
         btl[k] = v
     # Put data columns into alphabetical order
     btl_columns = btl.columns.sort_values()
-    btl_starters = ["station", "bottle", *btl_extras.keys(), "datetime", "datenum"]
+    btl_starters = [
+        "station",
+        "bottle",
+        *btl_extras.keys(),
+        "datetime",
+        "datenum",
+    ]
     btl_columns = [*btl_starters, *btl_columns.drop(btl_starters)]
     btl = btl[btl_columns]
     # Create station_bottle column and set as index
     btl["bottle"] = btl.bottle.astype(int)
-    btl["station_bottle"] = btl.station.astype(str) + "-" + btl.bottle.astype(str)
+    btl["station_bottle"] = (
+        btl.station.astype(str) + "-" + btl.bottle.astype(str)
+    )
     btl = btl.set_index("station_bottle")
     return btl
 
@@ -274,7 +289,9 @@ def read_btl_dir(btl_path, **kwargs):
     btl_stations.sort()
     btl = []
     for station in btl_stations:
-        btl.append(read_btl(btl_path + btl_files[station], station=station, **kwargs))
+        btl.append(
+            read_btl(btl_path + btl_files[station], station=station, **kwargs)
+        )
     btl = pd.concat(btl)
     return btl
 
@@ -397,7 +414,11 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None, verbose=True):
         else:
             cluster_vars[i] = "__REMOVE__"
             if verbose:
-                print('dc.ctd.get_deep(): Could not cluster column "{}".'.format(k))
+                print(
+                    'dc.ctd.get_deep(): Could not cluster column "{}".'.format(
+                        k
+                    )
+                )
     while "__REMOVE__" in cluster_vars:
         cluster_vars.remove("__REMOVE__")
     btl_stations = btl.station.unique()

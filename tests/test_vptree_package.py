@@ -1,10 +1,11 @@
 import unittest
-from dreamcoat.maps import vptree
+
 import numpy as np
+
+from dreamcoat.maps import vptree
 
 
 class TestVPTree(unittest.TestCase):
-
     def test_single_nearest_neighbor(self):
         dim = 10
         query = [0.5] * dim
@@ -28,7 +29,9 @@ class TestVPTree(unittest.TestCase):
             brute_force_nearest = brute_force[:k]
             for nearest, bf_nearest in zip(tree_nearest, brute_force_nearest):
                 self.assertEqual(nearest[0], bf_nearest[0])
-                self.assertTrue(all(n == b for n, b in zip(nearest[1], bf_nearest[1])))
+                self.assertTrue(
+                    all(n == b for n, b in zip(nearest[1], bf_nearest[1]))
+                )
 
     def test_epsilon_search(self):
         dim = 10
@@ -38,10 +41,14 @@ class TestVPTree(unittest.TestCase):
 
         for eps in (-1, 0, 1, 2, 10):
             tree_nearest = sorted(tree.get_all_in_range(query, eps))
-            brute_force_nearest = [point for point in brute_force if point[0] < eps]
+            brute_force_nearest = [
+                point for point in brute_force if point[0] < eps
+            ]
             for nearest, bf_nearest in zip(tree_nearest, brute_force_nearest):
                 self.assertEqual(nearest[0], bf_nearest[0])
-                self.assertTrue(all(n == b for n, b in zip(nearest[1], bf_nearest[1])))
+                self.assertTrue(
+                    all(n == b for n, b in zip(nearest[1], bf_nearest[1]))
+                )
 
     def test_empty_points_raises_valueerror(self):
         self.assertRaises(ValueError, vptree.VPTree, [], euclidean)
