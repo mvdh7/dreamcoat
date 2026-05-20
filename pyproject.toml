@@ -29,6 +29,7 @@ dependencies = [
     "networkx>=3.6.1,<4",
     "scipy>=1.17.1,<2",
     "scikit-learn>=1.8.0,<2",
+    "pandas>=3.0.3,<4",
 ]
 dynamic = ["version"]
 requires-python = ">= 3.11"
@@ -49,7 +50,7 @@ lines-after-imports = 2
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["osx-arm64"]
+platforms = ["osx-arm64", "linux-64"]
 
 [tool.pixi.pypi-dependencies]
 dreamcoat = { path = ".", editable = true }
@@ -60,3 +61,4 @@ dreamcoat = { path = ".", editable = true }
 ipykernel = ">=7.2.0,<8"
 pytest = ">=9.0.3,<10"
 cartopy = ">=0.25.0,<0.26"
+pyarrow = ">=24.0.0,<25"

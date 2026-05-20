@@ -26,6 +26,6 @@ def test_wrap():
     assert ll_180.longitude_dd == ll_360.longitude_dd == -90
 
 
-test_dd()
-test_ddm()
-test_wrap()
+# test_dd()
+# test_ddm()
+# test_wrap()
