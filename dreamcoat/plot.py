@@ -69,9 +69,9 @@ def get_clusters(x, Y, cluster_bandwidth):
         _description_
     """
     # Eliminate NaNs from input data
-    l = ~np.isnan(x)
-    x = x[l]
-    Y = Y[l]
+    L = ~np.isnan(x)
+    x = x[L]
+    Y = Y[L]
     # Do MeanShift clustering of the x-variable
     ms = cluster.MeanShift(bandwidth=cluster_bandwidth)
     ms.fit(np.vstack(x))
@@ -228,7 +228,6 @@ def smooth_whittaker(y, factor=1, monotonic=True):
             break
     if monotonic:
         # Enforce true monotonicity
-        zLd = np.diff(zL)
         for i in range(1, len(zL)):
             if zL[i] <= zL[i - 1]:
                 zL[i] = zL[i - 1] + zL[i - 1] * 1e-12
