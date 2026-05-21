@@ -1,9 +1,8 @@
 import os
 
 
-version_number = "0.4"
-version_colour = "brown"
-__version__ = "{}-{}".format(version_number, version_colour)
+__version__ = "0.5"
+version_colour = "scarlet"
 
 
 def hello():
@@ -25,7 +24,7 @@ def hello():
     )
     print(
         "{:^88}".format(
-            "{} version ({})".format(version_colour.title(), version_number)
+            "{} version ({})".format(version_colour.title(), __version__)
         )
     )
 
