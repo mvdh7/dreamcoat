@@ -21,13 +21,15 @@ def test_std_bias_correction():
             0.9693106998,  # 9
             0.9726592741,  # 10
             0.9974779761,  # 100
-            # Can't use sample_sizes below here because factorial(k - 1) returns inf
+            # Can't use sample_sizes below here because factorial(k - 1)
+            # returns inf
             # 0.9997497811,  # 1000
             # 0.9999749978,  # 10000
         ]
     )
     diff = np.round(c4, decimals=10) - c4_wikipedia
-    # We get the final (10th) decimal place slightly wrong for sample_sizes 7 and 9
+    # We get the final (10th) decimal place slightly wrong for
+    # sample_sizes 7 and 9
     assert np.all(np.abs(diff) < 1e-9)
 
 

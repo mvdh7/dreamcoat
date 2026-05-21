@@ -8,17 +8,20 @@ from . import maps, plot
 
 
 class CruiseGraph(nx.Graph):
-    """A graph representation of a cruise for computing neutral surfaces.
+    """A graph representation of a cruise for computing neutral
+    surfaces.
 
     Parameters
     ----------
     ctdz : pd.DataFrame
-        CTD sensor data for a cruise binned at regular depth or pressure intervals and
-        including only downcast data.  Must contain at least the following columns:
+        CTD sensor data for a cruise binned at regular depth or pressure
+        intervals and including only downcast data.  Must contain at
+        least the following columns:
             station : int or str
                 An identifier that is unique for each CTD station.
             latitude, longitude : float
-                Latitude and longitude in decimal degrees (N and E positive).
+                Latitude and longitude in decimal degrees (N and E
+                positive).
             pressure : float
                 Hydrostatic pressure in dbar.
             theta : float
@@ -27,15 +30,18 @@ class CruiseGraph(nx.Graph):
                 Practical salinity.
         The ctdz dataframe is stored in CruiseGraph.ctdz.
     edges : array-like, optional
-        List of adjacency edges between pairs of stations, in the format required by
-        nx.Graph.add_edges_from(), where edges here = ebunch_to_add there.
+        List of adjacency edges between pairs of stations, in the format
+        required by `nx.Graph.add_edges_from()`, where `edges` here =
+        `ebunch_to_add` there.
 
     Methods
     -------
     get_surfaces
-        Compute all omega surfaces relative to a given reference station.
+        Compute all omega surfaces relative to a given reference
+        station.
     get_surfaces_all
-        Compute all omega surfaces with every station used as the reference separately.
+        Compute all omega surfaces with every station used as the
+        reference separately.
     plot_surface_map
         Draw the adjacency graph and pressure on a given surface.
     """
@@ -51,7 +57,8 @@ class CruiseGraph(nx.Graph):
             self.add_edges_from(edges)
 
     def _get_veronis_here(self):
-        # Calculate Veronis densities with each station referenced to itself
+        # Calculate Veronis densities with each station referenced to
+        # itself
         # from neutralocean.label import veronis  # for neutralocean v2.2.0
         from neutralocean.label import (
             veronis_density,  # for neutralocean v2.1.3
@@ -79,7 +86,8 @@ class CruiseGraph(nx.Graph):
                 # )
         self.ctdz["veronis_here_raw"] -= 1000
         for s, station in self.ctdz.groupby("station"):
-            # TODO add remove outliers step before smoothing!  (search "cutoff" below)
+            # TODO add remove outliers step before smoothing!
+            # (search "cutoff" below)
             S = self.ctdz.station == s
             self.ctdz.loc[S, "veronis_here"] = plot.smooth_whittaker(
                 station.veronis_here_raw.values
@@ -156,25 +164,28 @@ class CruiseGraph(nx.Graph):
         self.stp = [stp[v] for v in stp_vars]
 
     def get_surfaces(self, station_ref, cutoff=5):
-        """Compute all omega surfaces relative to a given reference station.
+        """Compute all omega surfaces relative to a given reference
+        station.
 
-        After computing, surfaces are processed to remove outliers and smoothed so that
-        each surface increases monotonically.  Veronis density labels are assigned from
-        the reference station.
+        After computing, surfaces are processed to remove outliers and
+        smoothed so that each surface increases monotonically.  Veronis
+        density labels are assigned from the reference station.
 
-        Raw computed surfaces are stored in CruiseGraph.surfaces_raw[station_ref], and
-        processed surfacs are in CruiseGraph.surfaces[station_ref].
+        Raw computed surfaces are stored in
+        `CruiseGraph.surfaces_raw[station_ref]`, and processed surfacs
+        are in `CruiseGraph.surfaces[station_ref]`.
 
-        The processed surfaces and their labels are also added to CruiseGraph.ctdz in
-        columns called "p_at_<station_ref>" and "veronis_<station_ref>".
+        The processed surfaces and their labels are also added to
+        `CruiseGraph.ctdz` in columns called "p_at_<station_ref>" and
+        "veronis_<station_ref>".
 
         Parameters
         ----------
         station_ref : int or str
             The identifier for the station to use as the reference.
         cutoff : float
-            The cutoff for outlier removal in dbar, by default 5.  Set to a very high
-            number to not remove outliers.
+            The cutoff for outlier removal in dbar, by default 5.  Set
+            to a very high number to not remove outliers.
         """
         from neutralocean.surface import omega_surf
 
@@ -209,14 +220,14 @@ class CruiseGraph(nx.Graph):
         self._label_surfaces(station_ref)
 
     def get_surfaces_all(self, cutoff=5, verbose=True):
-        """Compute all omega surfaces using CruiseGraph.get_surfaces() with every
-        station used as the reference separately.
+        """Compute all omega surfaces using CruiseGraph.get_surfaces()
+        with every station used as the reference separately.
 
         Parameters
         ----------
         cutoff : float
-            The cutoff for outlier removal in dbar, by default 5.  Set to a very high
-            number to not remove outliers.
+            The cutoff for outlier removal in dbar, by default 5.  Set
+            to a very high number to not remove outliers.
         verbose : bool
             Whether to print progress, by default True.
         """
@@ -320,30 +331,33 @@ class CruiseGraph(nx.Graph):
         Parameters
         ----------
         station_ref : int or str
-            The identifier for the station to use as the reference.  The method
-            CruiseGraph.get_surfaces(station_ref) is run if it hasn't already been.
+            The identifier for the station to use as the reference.  The
+            method `CruiseGraph.get_surfaces(station_ref)` is run if it
+            hasn't already been.
         p_surface : float
-            What pressure at the reference station to plot the surface for.  Does not
-            need to match exactly, the closest one will be used.
+            What pressure at the reference station to plot the surface
+            for.  Does not need to match exactly, the closest one will
+            be used.
         crs : Cartopy crs
-            A coordinate reference system from cartopy.crs.  If not provided, then
-            cartopy.crs.PlateCarree() is used.
+            A coordinate reference system from cartopy.crs.  If not
+            provided, then `cartopy.crs.PlateCarree()` is used.
         cutoff : float, optional
-            The cutoff for outlier removal in dbar, by default 5.  Set to a very high
-            number to not remove outliers.  Only used if the method
-            CruiseGraph.get_surfaces(station_ref) needs to be run.
+            The cutoff for outlier removal in dbar, by default 5.  Set
+            to a very high number to not remove outliers.  Only used if
+            the method `CruiseGraph.get_surfaces(station_ref)` needs to
+            be run.
         dpi : int, optional
             Figure resolution, by default 300.
         extent : array-like, optional
-            Map extent, as [lon_min, lon_max, lat_min, lat_max].  If not provided,
-            the extent of the stations plus padding is used (see pad_latitude and
-            pad_longitude).
+            Map extent, as [lon_min, lon_max, lat_min, lat_max].  If not
+            provided, the extent of the stations plus padding is used
+            (see `pad_latitude` and `pad_longitude`).
         pad_latitude : float, optional
-            Fraction by which to pad the latitude axis if extent not provided, by
-            default 0.2.
+            Fraction by which to pad the latitude axis if extent not
+            provided, by default 0.2.
         pad_longitude : float, optional
-            Fraction by which to pad the longitude axis if extent not provided, by
-            default 0.2.
+            Fraction by which to pad the longitude axis if extent not
+            provided, by default 0.2.
         """
         if station_ref not in self.surfaces:
             self.get_surfaces(station_ref, cutoff=cutoff)

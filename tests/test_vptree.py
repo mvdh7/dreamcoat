@@ -10,7 +10,9 @@ coords = dc.maps.coastline_coords(lat_range, lon_range, resolution="110m")
 
 
 def test_geodesic_distance():
-    """Do we calculate the same distances as http://edwilliams.org/gccalc.htm ?"""
+    """Do we calculate the same distances as
+    http://edwilliams.org/gccalc.htm ?
+    """
     dist0 = dc.maps.geodesic_distance((0, 1), (0, 0))
     assert isinstance(dist0, float)
     assert np.isclose(dist0, 110.57438855790893)
@@ -23,7 +25,9 @@ def test_geodesic_distance():
 
 
 def test_coastline_coords():
-    """Do we return coordinates of the coastline(s) in the expected format?"""
+    """Do we return coordinates of the coastline(s) in the expected
+    format?
+    """
     assert isinstance(coords, list)
     assert len(coords) > 0
     for coord in coords:

@@ -12,15 +12,18 @@ read_bl
 read_btl
     Import a btl file and parse it into a usable format.
 read_btl_dir
-    Import all btl files in a directory and parse them into a usable format.
+    Import all btl files in a directory and parse them into a usable
+    format.
 read_btl_raw
     Import a btl file from the CTD with minimal processing.
 read_cnv
     Read the contents of a cnv file from a CTD cast.
 read_ctd_bl_create_btl
-    Create a new "btl file" from the 1 Hz data file with a selected averaging period.
+    Create a new "btl file" from the 1 Hz data file with a selected
+    averaging period.
 get_downcast_upcast_1m_u_d
-    Make logicals for downcast and upcast sections of a 1m-binned CTD file.
+    Make logicals for downcast and upcast sections of a 1m-binned CTD
+    file.
 """
 
 import os
@@ -77,7 +80,8 @@ def read_cnv(filename, station=None):
     pd.DataFrame
         The imported dataset.
     """
-    # Find number of header lines to skip and get column headers and other info
+    # Find number of header lines to skip and get column headers and
+    # other info
     with open(filename, "r", encoding="unicode_escape", errors="replace") as f:
         skiprows = 0
         names = []
@@ -107,7 +111,8 @@ def read_cnv(filename, station=None):
                 )
             # Increment row counter
             skiprows += 1
-    # Deal with duplicate names by appending "_2" to their second appearance
+    # Deal with duplicate names by appending "_2" to their second
+    # appearance
     names_duplicate = []
     for i, name in enumerate(names):
         if names.count(name) == 2:
@@ -168,9 +173,10 @@ def read_btl_raw(filename, colwidths=11, encoding="unicode_escape"):
             elif btl_line.startswith("* NMEA Longitude"):
                 btl_extras["longitude"] = btl_line.split(" = ")[1]
             skiprows += 1
-    # This really awkward way of extracting the column headers is because sometimes they
-    # run into each other (without whitespace in between) in the .btl files, which
-    # prevents pandas from inferring the column widths correctly:
+    # This really awkward way of extracting the column headers is
+    # because sometimes they run into each other (without whitespace in
+    # between) in the .btl files, which prevents pandas from inferring
+    # the column widths correctly:
     headers = textwrap.wrap(
         btl_line.replace(" ", "_"), width=colwidths, break_on_hyphens=False
     )
@@ -193,7 +199,8 @@ def read_btl(filename, station=None, **kwargs):
     filename : str
         The btl filename (and path).
     station : str or int, optional
-        The station number (which is added as a column), by default None.
+        The station number (which is added as a column), by default
+        None.
     **kwargs
         Additional kwargs to pass to read_btl_raw().
 
@@ -215,7 +222,8 @@ def read_btl(filename, station=None, **kwargs):
     btl["datenum"] = mdates.date2num(btl.datetime)
     btl.drop(columns=["Date", "date", "time"], inplace=True)
     # Put sdevs into the avg rows
-    for c in ctd_renamer.values():  # first just copy the complete columns
+    for c in ctd_renamer.values():
+        # First, just copy the complete columns
         if c in btl and c != "bottle":
             btl[c + "_sd"] = btl[c]
     btl_avg = btl.type == "(avg)"
@@ -284,8 +292,8 @@ def read_btl_dir(btl_path, **kwargs):
     # Get corresponding station for each file
     btl_files = {int(f.split("-")[1].split("CTD")[0]): f for f in btl_files}
     btl_stations = list(btl_files.keys())
-    # Import the bottle files in ascending station order and concatenate into a single
-    # dataframe
+    # Import the bottle files in ascending station order and concatenate
+    # into a single DataFrame
     btl_stations.sort()
     btl = []
     for station in btl_stations:
@@ -326,8 +334,8 @@ def read_bl(filename_bl):
 
 
 def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
-    """Create a new "btl file" by averaging data in the 1 Hz data file over a certain
-    period before each bottle was fired.
+    """Create a new "btl file" by averaging data in the 1 Hz data file
+    over a certain period before each bottle was fired.
 
     Parameters
     ----------
@@ -339,8 +347,8 @@ def read_ctd_bl_create_btl(filename_cnv_1Hz, filename_bl, period="30s"):
     Returns
     -------
     pd.DataFrame
-        The new "btl file" with all variables averaged over the specified period before
-        each bottle firing moment.
+        The new "btl file" with all variables averaged over the
+        specified period before each bottle firing moment.
     """
     ctd = read_cnv(filename_cnv_1Hz)
     bl = read_bl(filename_bl)
@@ -380,10 +388,11 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None, verbose=True):
     cluster_bandwidth : float, optional
         The cluster bandwidth in m, by default 1.
     cluster_vars : list, optional
-        Which variables to compute clusters for, by default None, in which case, all
-        possible columns in btl are used.
+        Which variables to compute clusters for, by default None, in
+        which case, all possible columns in btl are used.
     verbose : bool, optional
-        Whether to report on columns that cannot be clustered, by default True.
+        Whether to report on columns that cannot be clustered, by
+        default True.
 
     Returns
     -------
@@ -451,21 +460,25 @@ def get_deep(btl, cluster_bandwidth=1, cluster_vars=None, verbose=True):
 
 
 def get_downcast_upcast_1m_u_d(ctd_1m_u_d, inplace=True):
-    """Make logicals for downcast and upcast sections of a 1m-binned CTD file.
+    """Make logicals for downcast and upcast sections of a 1m-binned CTD
+    file.
 
     Parameters
     ----------
     ctd_1m_u_d : pd.DataFrame
-        A 1m-binned CTD file including both downcast and upcast sections.
+        A 1m-binned CTD file including both downcast and upcast
+        sections.
         May include data from multiple different stations.
-        Must contain a filled "station" column, even if there is only one station.
+        Must contain a filled "station" column, even if there is only
+        one station.
     inplace : bool, optional
         Whether to add the new columns in-place, by default True
 
     Returns
     -------
     pd.DataFrame
-        The ctd_1m_u_d dataframe with extra Boolean columns "downcast" and "upcast".
+        The ctd_1m_u_d dataframe with extra Boolean columns "downcast"
+        and "upcast".
     """
     if not inplace:
         ctd_1m_u_d = ctd_1m_u_d.copy()

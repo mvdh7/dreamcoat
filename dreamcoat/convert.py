@@ -6,7 +6,8 @@ Conversions between different units and formats.
 Functions
 ---------
 extent_to_nsew
-    Get "N", "S", "E" and "W" from map extent values depending on their sign.
+    Get "N", "S", "E" and "W" from map extent values depending on their
+    sign.
 knots_to_kph
     Knots into kilometers per hour.
 kph_to_knots
@@ -25,7 +26,8 @@ import numpy as np
 
 
 def extent_to_nsew(map_extent):
-    """Get "N", "S", "E" and "W" from map extent values depending on their sign.
+    """Get "N", "S", "E" and "W" from map extent values depending on
+    their sign.
 
     Parameters
     ----------
@@ -35,7 +37,8 @@ def extent_to_nsew(map_extent):
     Returns
     -------
     list of str
-        ["E"/"W", "E"/"W", "N"/"S", "N"/"S"] as appropriate for the given extents.
+        ["E"/"W", "E"/"W", "N"/"S", "N"/"S"] as appropriate for the
+        given extents.
     """
     nsew = [
         " EW"[int(np.sign(map_extent[0]))],
@@ -111,8 +114,8 @@ def km_to_nm(km):
 
 
 def cartesian_to_polar(x, y):
-    """Convert from Cartesian to polar co-ordinates, where theta is zero in the N
-    position and increases clockwise.
+    """Convert from Cartesian to polar co-ordinates, where theta is zero
+    in the N position and increases clockwise.
 
     Parameters
     ----------
@@ -134,8 +137,8 @@ def cartesian_to_polar(x, y):
 
 
 def polar_to_cartesian(theta, rho):
-    """Convert from polar to Cartesian co-ordinates, where theta is zero in the N
-    position and increases clockwise.
+    """Convert from polar to Cartesian co-ordinates, where theta is zero
+    in the N position and increases clockwise.
 
     Parameters
     ----------
@@ -157,7 +160,8 @@ def polar_to_cartesian(theta, rho):
 
 
 def spherical_to_cartesian(azimuth, elevation, r):
-    """Convert from spherical to Cartesian co-ordinates, following MATLAB's sph2cart.
+    """Convert from spherical to Cartesian co-ordinates, following
+    MATLAB's sph2cart.
 
     Parameters
     ----------
@@ -180,7 +184,8 @@ def spherical_to_cartesian(azimuth, elevation, r):
 
 
 def cartesian_to_spherical(x, y, z):
-    """Convert from Cartesian to spherical co-ordinates, following MATLAB's cart2sph.
+    """Convert from Cartesian to spherical co-ordinates, following
+    MATLAB's cart2sph.
 
     Parameters
     ----------

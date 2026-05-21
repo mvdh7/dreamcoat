@@ -26,10 +26,19 @@ def add_credit(ax):
         1.008,
         0.01,
         "dreamcoat {}".format(meta.version_colour),
-        # "dreamcoat {} (v{})".format(meta.version_colour, meta.version_number),
+        # "dreamcoat {} (v{})".format(
+        #     meta.version_colour,
+        #     meta.version_number,
+        # ),
         c="xkcd:{}".format(meta.version_colour),
-        # fontweight="bold",
-        # path_effects=[pe.withStroke(linewidth=0.8, alpha=0.7, foreground="#ceb301")],
+        fontweight="bold",
+        # path_effects=[
+        #     pe.withStroke(
+        #         linewidth=0.8,
+        #         alpha=0.7,
+        #         foreground="#ceb301",
+        #     )
+        # ],
         ha="left",
         va="bottom",
         rotation=-90,
@@ -48,7 +57,7 @@ def get_clusters(x, Y, cluster_bandwidth):
     Y : np.ndarray
         _description_
     cluster_bandwitdh : float
-        The ``bandwith`` kwarg for ``sklearn.cluster.MeanShift``.
+        The `bandwith` kwarg for `sklearn.cluster.MeanShift`.
 
     Returns
     -------
@@ -122,7 +131,8 @@ def cluster_profile(
     plot_kwargs=None,
     scatter_kwargs=None,
 ):
-    """Get clusters from input data, interpolate them and plot the results.
+    """Get clusters from input data, interpolate them and plot the
+    results.
 
     Parameters
     ----------
@@ -131,21 +141,26 @@ def cluster_profile(
     y : np.ndarray
         The dependent variable.
     data : dict-like, optional
-        If provided, ``x`` and ``y`` are treated as being the keys (so the independent
-        variable data is in ``data[x]`` and dependent in ``data[y]``).
+        If provided, `x` and `y` are treated as being the keys (so
+        the independent variable data is in `data[x]` and dependent in
+        `data[y]`).
     ax : optional
-        Matplotlib axes to draw the figure on.  If not provided, new axes are created.
+        Matplotlib axes to draw the figure on.  If not provided, new
+        axes are created.
     cluster_bandwitdh : float, optional
-        The ``bandwith`` kwarg for ``sklearn.cluster.MeanShift``, by default 5.
+        The `bandwith` kwarg for `sklearn.cluster.MeanShift`, by
+        default 5.
     linspace_num : int, optional
-        The ``num`` kwarg for ``np.linspace`` interpolation, by default 100.
+        The `num` kwarg for `np.linspace` interpolation, by default
+        100.
     invert_xy : bool, optional
-        Whether to plot the independent variable on the x-axis (False) or y-axis (True),
+        Whether to plot the independent variable on the x-axis (False)
+        or y-axis (True),
         by default False.
     plot_kwargs : dict, optional
-        Any kwargs to pass to the ``ax.plot`` artist.
+        Any kwargs to pass to the `ax.plot` artist.
     scatter_kwargs : dict, optional
-        Any kwargs to pass to the ``ax.scatter`` artist.
+        Any kwargs to pass to the `ax.scatter` artist.
     """
     # Extract data from data, if required
     if data is not None:
@@ -186,7 +201,8 @@ def smooth_whittaker(y, factor=1, monotonic=True):
     factor : float, optional
         Smoothing factor.  The default is 1.
     monotonic : bool, optional
-        Whether the smoothed curve should increase monotonically. The default is True.
+        Whether the smoothed curve should increase monotonically. The
+        default is True.
 
     Returns
     -------

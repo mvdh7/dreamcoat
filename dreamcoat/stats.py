@@ -5,21 +5,22 @@ from scipy.special import factorial
 
 
 def std_bias_correction(sample_size):
-    """Find bias correction for standard deviations computed from small numbers of
-    normally distributed measurements.
+    """Find bias correction for standard deviations computed from small
+    numbers of normally distributed measurements.
 
     Parameters
     ----------
     sample_size : int
-        Number of measurements from which the standard deviation was computed.
+        Number of measurements from which the standard deviation was
+        computed.
 
     Returns
     -------
     c4 : float
         The correction factor c4, based on the equations from
         https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation
-        The standard deviation obtained from np.std(a, ddof=1) should be divided by
-        this c4 value to find the unbiased estimate.
+        The standard deviation obtained from np.std(a, ddof=1) should be
+        divided by this c4 value to find the unbiased estimate.
     """
     k = np.floor(sample_size / 2)
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -38,8 +39,9 @@ def std_bias_correction(sample_size):
 
 
 def std_unbiased(a, axis=None, **kwargs):
-    """Compute standard deviation unbiased for the number of samples, assuming a normal
-    distribution.  The correction factor c4 is used, based on the equations from
+    """Compute standard deviation unbiased for the number of samples,
+    assuming a normal distribution.  The correction factor c4 is used,
+    based on the equations from
     https://en.wikipedia.org/wiki/Unbiased_estimation_of_standard_deviation
 
     Parameters
@@ -47,14 +49,15 @@ def std_unbiased(a, axis=None, **kwargs):
     a : array-like
         The values to find the standard deviation of.
     axis : int, optional
-        Which axis to find the standard deviation along, by default None.  For example,
-        with an array of shape (1000, 4) and axis=1, this represents 1000 different
-        groups of 4 measurements.
+        Which axis to find the standard deviation along, by default
+        None.  For example, with an array of shape (1000, 4) and axis=1,
+        this represents 1000 different groups of 4 measurements.
 
     Returns
     -------
     float
-        The unbiased standard deviation, corrected for the number of samples.
+        The unbiased standard deviation, corrected for the number of
+        samples.
     """
     if axis is None:
         size_a = np.size(a)

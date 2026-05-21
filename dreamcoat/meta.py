@@ -31,9 +31,10 @@ def hello():
 
 
 def get_dat_data(filename):
-    """Find data from a file in the .dreamcoat folder, which should be in the user's
-    home path, as returned by `os.path.expanduser('~')`.  If the file is not found, then
-    the user is prompted to enter a value instead.
+    """Find data from a file in the .dreamcoat folder, which should be
+    in the user's home path, as returned by `os.path.expanduser('~')`.
+    If the file is not found, then the user is prompted to enter a value
+    instead.
 
     Parameters
     ----------

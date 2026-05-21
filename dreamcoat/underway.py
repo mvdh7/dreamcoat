@@ -6,7 +6,8 @@ Read and process underway data files (specifically, from RV Pelagia).
 Functions
 ---------
 read_sql
-    Import the data from an sql underway file and parse it into a usable format.
+    Import the data from an sql underway file and parse it into a usable
+    format.
 """
 
 import numpy as np
@@ -15,7 +16,8 @@ from matplotlib import dates as mdates
 
 
 def read_sql(filename):
-    """Import the data from an sql underway file and parse it into a usable format.
+    """Import the data from an sql underway file and parse it into a
+    usable format.
 
     Parameters
     ----------
