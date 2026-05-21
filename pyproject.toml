@@ -1,8 +1,6 @@
 [build-system]
-requires = [
-    "setuptools", 
-]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "dreamcoat"
@@ -34,11 +32,8 @@ dependencies = [
 dynamic = ["version"]
 requires-python = ">= 3.11"
 
-[tool.setuptools.packages.find]
-include = ["dreamcoat*"]
-
-[tool.setuptools.dynamic]
-version = {attr = "dreamcoat.meta.version_number"}
+[tool.hatch.version]
+path = "dreamcoat/meta.py"
 
 [tool.ruff]
 line-length = 79
@@ -50,7 +45,7 @@ lines-after-imports = 2
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
-platforms = ["osx-arm64", "linux-64"]
+platforms = ["osx-arm64", "linux-64", "win-64"]
 
 [tool.pixi.pypi-dependencies]
 dreamcoat = { path = ".", editable = true }
